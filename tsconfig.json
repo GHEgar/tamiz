@@ -1,0 +1,36 @@
+{
+    "compilerOptions": {
+        "target": "ES2022",
+        "module": "ESNext",
+        "moduleResolution": "Bundler",
+        "lib": [
+            "ES2022",
+            "DOM",
+            "DOM.Iterable"
+        ],
+        "jsx": "react-jsx",
+        "strict": true,
+        "noUncheckedIndexedAccess": true,
+        "exactOptionalPropertyTypes": true,
+        "isolatedModules": true,
+        "verbatimModuleSyntax": true,
+        "skipLibCheck": true,
+        "types": [],
+        "paths": {
+            "@ghegar/tamiz/react": [
+                "./src/react/index.ts"
+            ],
+            "@ghegar/tamiz/ol": [
+                "./src/ol/index.ts"
+            ],
+            "@ghegar/tamiz": [
+                "./src/core/index.ts"
+            ]
+        }
+    },
+    "include": [
+        "src",
+        "test",
+        "demo"
+    ]
+}

@@ -1,0 +1,7 @@
+node_modules
+dist
+coverage
+*.log
+demo-dist
+test-results
+playwright-report

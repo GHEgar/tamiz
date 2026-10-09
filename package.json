@@ -1,0 +1,68 @@
+{
+    "name": "@ghegar/tamiz",
+    "version": "0.1.0",
+    "description": "Headless attribute table for WFS/GeoServer layers: CQL filters, columns, paging, download and selection synced with OpenLayers.",
+    "license": "AGPL-3.0-only",
+    "author": "Edgar Villarreal",
+    "type": "module",
+    "sideEffects": false,
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/GHEgar/tamiz.git"
+    },
+    "files": [
+        "dist"
+    ],
+    "exports": {
+        ".": {
+            "types": "./dist/core/index.d.ts",
+            "import": "./dist/core/index.js"
+        },
+        "./react": {
+            "types": "./dist/react/index.d.ts",
+            "import": "./dist/react/index.js"
+        },
+        "./ol": {
+            "types": "./dist/ol/index.d.ts",
+            "import": "./dist/ol/index.js"
+        }
+    },
+    "scripts": {
+        "build": "rm -rf dist && tsc -p tsconfig.build.json",
+        "typecheck": "tsc -p tsconfig.json --noEmit",
+        "lint": "eslint .",
+        "test": "vitest run",
+        "test:watch": "vitest",
+        "demo": "vite --config demo/vite.config.ts",
+        "demo:build": "vite build --config demo/vite.config.ts"
+    },
+    "peerDependencies": {
+        "ol": ">=10",
+        "react": ">=19"
+    },
+    "peerDependenciesMeta": {
+        "ol": {
+            "optional": true
+        },
+        "react": {
+            "optional": true
+        }
+    },
+    "devDependencies": {
+        "@eslint/js": "^10.0.1",
+        "@testing-library/react": "^16.3.3",
+        "@types/react": "^19.3.0",
+        "@types/react-dom": "^19.3.0",
+        "@vitejs/plugin-react": "^6.1.2",
+        "eslint": "^10.12.0",
+        "eslint-plugin-react-hooks": "^7.1.1",
+        "happy-dom": "^20.14.5",
+        "ol": "^10.11.0",
+        "react": "^19.3.0",
+        "react-dom": "^19.3.0",
+        "typescript": "~6.0.3",
+        "typescript-eslint": "^8.71.1",
+        "vite": "^8.3.4",
+        "vitest": "^5.0.3"
+    }
+}

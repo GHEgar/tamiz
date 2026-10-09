@@ -1,0 +1,62 @@
+import Map from 'ol/Map.js';
+import View from 'ol/View.js';
+import { describe, expect, it } from 'vitest';
+import { createAttributeTable } from '../../src/core/index.js';
+import { bindOlSelection, clickExtent } from '../../src/ol/index.js';
+import { createFakeWfs, settle } from '../fake-wfs.js';
+
+const setup = () => {
+    const fake = createFakeWfs();
+    const table = createAttributeTable({ source: { url: 'https://x/wfs', typeName: 'ws:municipios', fetch: fake.fetch } });
+    const map = new Map({ view: new View({ center: [0, 0], zoom: 2 }) });
+    return { fake, table, map };
+};
+
+describe('bindOlSelection', () => {
+    it('computes a click extent from resolution and tolerance', () => {
+        expect(clickExtent([100, 200], 2, 4)).toEqual([92, 192, 108, 208]);
+    });
+
+    it('adds its layer and fetches geometries of the selection in the map projection', async () => {
+        const { fake, table, map } = setup();
+        const binding = bindOlSelection(table, map);
+        expect(map.getLayers().getArray()).toContain(binding.layer);
+        table.select(['municipios.1', 'municipios.2']);
+        await settle();
+        await binding.sync();
+        const request = fake.last()?.params;
+        expect(request?.CQL_FILTER).toBe("IN ('municipios.1', 'municipios.2')");
+        expect(request?.srsName).toBe('EPSG:3857');
+        expect(binding.source.getFeatures()).toHaveLength(2);
+        table.select('municipios.2', 'toggle');
+        await settle();
+        expect(binding.source.getFeatures().map(feature => feature.getId())).toEqual(['municipios.1']);
+    });
+
+    it('selects through map clicks with the table query applied', async () => {
+        const { fake, table, map } = setup();
+        table.start();
+        await settle();
+        table.setFilter('poblacion', { kind: 'number', op: 'gt', value: 5 });
+        bindOlSelection(table, map, { hitTolerance: 1 });
+        map.dispatchEvent({ type: 'singleclick', coordinate: [0, 0], originalEvent: new MouseEvent('click') } as never);
+        await settle();
+        const request = fake.requests.find(item => item.params.CQL_FILTER?.includes('BBOX'))?.params;
+        expect(request?.CQL_FILTER).toMatch(/^\(poblacion > 5\) AND \(BBOX\(geom, .+'EPSG:3857'\)\)$/);
+        expect(request?.count).toBe('1');
+        expect([...table.getSnapshot().selection]).toEqual(['municipios.1']);
+    });
+
+    it('zooms to the selection and cleans up on destroy', async () => {
+        const { table, map } = setup();
+        map.setSize([400, 300]);
+        const binding = bindOlSelection(table, map, { fit: { duration: 0 } });
+        expect(binding.zoomToSelection()).toBe(false);
+        table.select(['municipios.2', 'municipios.5']);
+        await settle();
+        expect(binding.zoomToSelection()).toBe(true);
+        expect(map.getView().getCenter()).toEqual([25, 25]);
+        binding.destroy();
+        expect(map.getLayers().getArray()).not.toContain(binding.layer);
+    });
+});
