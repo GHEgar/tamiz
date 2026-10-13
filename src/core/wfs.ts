@@ -128,7 +128,7 @@ export const buildUrl = (source: WfsSource, params: Record<string, string>): str
     return `${source.url}${separator}${new URLSearchParams(params).toString()}`;
 };
 
-const exceptionText = (body: string): string | null => {
+export const exceptionText = (body: string): string | null => {
     const match = body.match(/<(?:ows:)?ExceptionText>([\s\S]*?)<\/(?:ows:)?ExceptionText>/)
         ?? body.match(/<ServiceException[^>]*>([\s\S]*?)<\/ServiceException>/);
     return match?.[1]?.trim() ?? null;

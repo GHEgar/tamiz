@@ -14,6 +14,7 @@ export interface WfsSource {
     headers?: Record<string, string>;
     params?: Record<string, string>;
     maxUrlLength?: number;
+    wpsUrl?: string;
 }
 
 export interface Field {

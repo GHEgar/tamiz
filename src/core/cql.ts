@@ -20,11 +20,14 @@ const isBlank = (value: unknown): boolean => value === null || value === undefin
 
 const NUMBER_OPERATORS = { eq: '=', ne: '<>', lt: '<', lte: '<=', gt: '>', gte: '>=' } as const;
 
+export const escapeLike = (value: string): string => value.replace(/[\\%_]/g, match => `\\${match}`);
+
 const textPattern = (op: 'contains' | 'startsWith' | 'endsWith' | 'equals', value: string): string => {
-    if (op === 'contains') return `%${value}%`;
-    if (op === 'startsWith') return `${value}%`;
-    if (op === 'endsWith') return `%${value}`;
-    return value;
+    const escaped = escapeLike(value);
+    if (op === 'contains') return `%${escaped}%`;
+    if (op === 'startsWith') return `${escaped}%`;
+    if (op === 'endsWith') return `%${escaped}`;
+    return escaped;
 };
 
 export const filterToCql = (column: string, filter: ColumnFilter): string | null => {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { and, bboxToCql, defaultFilterLabel, filterToCql, idsToCql, isEmptyFilter, literal, quoteIdentifier } from '../../src/core/index.js';
+import { and, bboxToCql, defaultFilterLabel, escapeLike, filterToCql, idsToCql, isEmptyFilter, literal, quoteIdentifier } from '../../src/core/index.js';
 
 describe('cql', () => {
     it('quotes identifiers only when needed', () => {
@@ -26,6 +26,14 @@ describe('cql', () => {
         expect(filterToCql('nombre', { kind: 'text', op: 'startsWith', value: 'Za', caseSensitive: true })).toBe("nombre LIKE 'Za%'");
         expect(filterToCql('nombre', { kind: 'text', op: 'equals', value: 'Tala', caseSensitive: true })).toBe("nombre = 'Tala'");
         expect(filterToCql('nombre', { kind: 'text', op: 'contains', value: '' })).toBeNull();
+    });
+
+    it('escapes LIKE wildcards in text filters', () => {
+        expect(escapeLike('50%_a\\b')).toBe('50\\%\\_a\\\\b');
+        expect(filterToCql('nombre', { kind: 'text', op: 'contains', value: '100%' })).toBe("nombre ILIKE '%100\\%%'");
+        expect(filterToCql('nombre', { kind: 'text', op: 'equals', value: "new_o'k" })).toBe("nombre ILIKE 'new\\_o''k'");
+        expect(filterToCql('nombre', { kind: 'text', op: 'endsWith', value: '_x', caseSensitive: true })).toBe("nombre LIKE '%\\_x'");
+        expect(filterToCql('nombre', { kind: 'text', op: 'equals', value: 'a_b', caseSensitive: true })).toBe("nombre = 'a_b'");
     });
 
     it('builds number, date, boolean and null filters', () => {

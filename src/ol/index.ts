@@ -11,12 +11,14 @@ import type { StyleLike } from 'ol/style/Style.js';
 import type { FlatStyleLike } from 'ol/style/flat.js';
 import type { AttributeTable, GeoJsonCollection, SelectMode } from '../core/index.js';
 
+export type PickFunction = (features: Feature[], coordinate: number[]) => Feature[];
+
 export interface OlSelectionOptions {
     style?: StyleLike | FlatStyleLike;
     zIndex?: number;
     selectOnClick?: boolean;
     hitTolerance?: number;
-    pick?: 'first' | 'all';
+    pick?: 'first' | 'all' | PickFunction;
     applyQuery?: boolean;
     zoomOnSelect?: boolean;
     fit?: FitOptions;
@@ -44,6 +46,13 @@ const clickMode = (event: MouseEvent | PointerEvent | KeyboardEvent | WheelEvent
     if (!('shiftKey' in event)) return 'replace';
     if (event.shiftKey || event.ctrlKey || event.metaKey) return 'toggle';
     return 'replace';
+};
+
+export const pickFeatures = (features: Feature[], extent: number[], coordinate: number[], pick: OlSelectionOptions['pick']): Feature[] => {
+    const hits = features.filter(feature => feature.getGeometry()?.intersectsExtent(extent) ?? false);
+    if (typeof pick === 'function') return pick(hits, coordinate);
+    if (pick === 'all') return hits;
+    return hits.slice(-1);
 };
 
 const asError = (value: unknown): Error => (value instanceof Error ? value : new Error(String(value)));
@@ -120,13 +129,14 @@ export const bindOlSelection = (table: AttributeTable, map: Map, options: OlSele
         if (resolution === undefined) return;
         const code = projection();
         const mode = clickMode(event.originalEvent);
+        const extent = clickExtent(event.coordinate, resolution, options.hitTolerance ?? 4);
         table.fetchFeatures({
-            bbox: { extent: clickExtent(event.coordinate, resolution, options.hitTolerance ?? 4), srsName: code },
+            bbox: { extent, srsName: code },
             applyQuery: options.applyQuery ?? true,
             srsName: code,
-            count: options.pick === 'all' ? options.maxFeatures ?? 50 : 1,
+            count: options.maxFeatures ?? 50,
         }).then(collection => {
-            const features = readFeatures(collection);
+            const features = pickFeatures(readFeatures(collection), extent, event.coordinate, options.pick);
             source.addFeatures(features.filter(feature => source.getFeatureById(feature.getId() ?? '') === null));
             const ids = features.map(feature => String(feature.getId()));
             if (ids.length === 0 && mode === 'toggle') return;

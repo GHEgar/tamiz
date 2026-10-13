@@ -1,5 +1,6 @@
 import { buildColumns, moveName, orderedNames, type ColumnState } from './columns.js';
 import { and, bboxToCql, filtersToCql, idsToCql } from './cql.js';
+import { createDistinct, type Distinct, type DistinctStrategy } from './distinct.js';
 import { createDownloads, type Downloads } from './table-download.js';
 import { buildChips, effectiveCql, type Labels, type QueryState } from './query.js';
 import { applySelection, sameSelection } from './selection.js';
@@ -15,6 +16,7 @@ export interface TableOptions {
     schema?: Schema;
     columns?: { order?: string[]; hidden?: string[]; labels?: Record<string, string> };
     labels?: Labels;
+    distinct?: DistinctStrategy;
     onEvent?: (event: TableEvent) => void;
 }
 
@@ -27,7 +29,7 @@ export interface FeatureRequest {
     signal?: AbortSignal;
 }
 
-export interface AttributeTable extends Downloads {
+export interface AttributeTable extends Downloads, Distinct {
     readonly source: WfsSource;
     readonly idField: string | null;
     subscribe(listener: () => void): () => void;
@@ -252,5 +254,6 @@ export const createAttributeTable = (options: TableOptions): AttributeTable => {
         setOnlySelected: value => { if (value !== state.onlySelected) setQuery({ onlySelected: value }); },
         fetchFeatures,
         ...createDownloads({ source, idField, getState: () => state, getSnapshot: () => snapshot, emit }),
+        ...createDistinct({ source, idField, strategy: options.distinct ?? 'scan', getState: () => state }),
     };
 };

@@ -1,6 +1,6 @@
 import { StrictMode, useEffect, useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { createAttributeTable, useAttributeTable, type WfsVersion } from '@ghegar/tamiz/react';
+import { createAttributeTable, useAttributeTable, type DistinctStrategy, type WfsVersion } from '@ghegar/tamiz/react';
 import { Controls } from './Controls';
 import { FilterForm } from './FilterForm';
 import { Grid } from './Grid';
@@ -13,6 +13,7 @@ const SOURCE = {
     typeName: query.get('type') ?? 'topp:states',
     version: (query.get('version') ?? '2.0.0') as WfsVersion,
 };
+const DISTINCT: Extract<DistinctStrategy, string> = query.get('distinct') === 'wps' ? 'wps' : 'scan';
 const WMS = query.get('wms') ?? SOURCE.url.replace(/\/wfs$/, '/wms');
 
 function App() {
@@ -20,6 +21,7 @@ function App() {
     const table = useMemo(() => createAttributeTable({
         source: SOURCE,
         pageSize: 25,
+        distinct: DISTINCT,
         labels: LABELS,
         onEvent: event => setLog(previous => [`${event.type}${'cql' in event ? ` · ${event.cql ?? '—'}` : ''}`, ...previous].slice(0, 6)),
     }), []);
@@ -32,6 +34,7 @@ function App() {
                 <strong>tamiz</strong>
                 <span>{SOURCE.typeName}</span>
                 <span className="muted">{SOURCE.url}</span>
+                <span className="muted">valores: {DISTINCT}</span>
             </header>
             <MapView table={table} wms={WMS} typeName={SOURCE.typeName} cql={t.cql} />
             <section className="table">

@@ -82,6 +82,22 @@ button:disabled {
     align-items: center;
 }
 
+.list-picker {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: flex-start;
+}
+
+.list-values {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 10px;
+    max-height: 96px;
+    max-width: 420px;
+    overflow: auto;
+}
+
 .spacer {
     flex: 1;
 }

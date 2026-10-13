@@ -2,7 +2,7 @@ import Map from 'ol/Map.js';
 import View from 'ol/View.js';
 import { describe, expect, it } from 'vitest';
 import { createAttributeTable } from '../../src/core/index.js';
-import { bindOlSelection, clickExtent } from '../../src/ol/index.js';
+import { bindOlSelection, clickExtent, type OlSelectionOptions } from '../../src/ol/index.js';
 import { createFakeWfs, settle } from '../fake-wfs.js';
 
 const setup = () => {
@@ -43,8 +43,41 @@ describe('bindOlSelection', () => {
         await settle();
         const request = fake.requests.find(item => item.params.CQL_FILTER?.includes('BBOX'))?.params;
         expect(request?.CQL_FILTER).toMatch(/^\(poblacion > 5\) AND \(BBOX\(geom, .+'EPSG:3857'\)\)$/);
-        expect(request?.count).toBe('1');
-        expect([...table.getSnapshot().selection]).toEqual(['municipios.1']);
+        expect(request?.count).toBe('50');
+    });
+
+    const square = (min: number, max: number) => ({
+        type: 'Polygon', coordinates: [[[min, min], [max, min], [max, max], [min, max], [min, min]]],
+    });
+
+    const clickOn = async (pick: OlSelectionOptions['pick']) => {
+        const fake = createFakeWfs({
+            features: [
+                { id: 'm.1', properties: { clave: '1' }, geometry: square(-10, 10) },
+                { id: 'm.2', properties: { clave: '2' }, geometry: square(-5, 5) },
+                { id: 'm.3', properties: { clave: '3' }, geometry: square(100, 110) },
+            ],
+        });
+        const table = createAttributeTable({ source: { url: 'https://x/wfs', typeName: 'ws:m', fetch: fake.fetch } });
+        table.start();
+        await settle();
+        const map = new Map({ view: new View({ center: [0, 0], resolution: 1 }) });
+        const binding = bindOlSelection(table, map, { hitTolerance: 1, ...(pick ? { pick } : {}) });
+        map.dispatchEvent({ type: 'singleclick', coordinate: [0, 0], originalEvent: new MouseEvent('click') } as never);
+        await settle();
+        return { table, binding };
+    };
+
+    it('picks the feature drawn on top, the last one that touches the click', async () => {
+        const { table, binding } = await clickOn(undefined);
+        expect([...table.getSnapshot().selection]).toEqual(['m.2']);
+        expect(binding.source.getFeatures().map(feature => feature.getId())).toEqual(['m.2']);
+    });
+
+    it('picks every touched feature or lets a function choose', async () => {
+        expect([...(await clickOn('all')).table.getSnapshot().selection]).toEqual(['m.1', 'm.2']);
+        const { table } = await clickOn(features => features.slice(0, 1));
+        expect([...table.getSnapshot().selection]).toEqual(['m.1']);
     });
 
     it('zooms to the selection and cleans up on destroy', async () => {

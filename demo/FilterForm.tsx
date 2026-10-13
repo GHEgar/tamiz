@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import type { Column, ColumnFilter } from '@ghegar/tamiz';
 import type { UseAttributeTable } from '@ghegar/tamiz/react';
+import { ListPicker } from './ListPicker';
 
 const buildFilter = (column: Column, op: string, value: string, extra: string): ColumnFilter | null => {
     switch (column.family) {
@@ -13,14 +14,13 @@ const buildFilter = (column: Column, op: string, value: string, extra: string): 
         case 'boolean':
             return { kind: 'boolean', value: value === 'true' };
         case 'text':
-            if (op === 'list') return { kind: 'list', values: value.split(',').map(item => item.trim()) };
             return { kind: 'text', op: op as 'contains', value };
     }
 };
 
 const OPS: Record<Column['family'], [string, string][]> = {
     text: [['contains', 'contiene'], ['startsWith', 'empieza con'], ['equals', 'es'], ['list', 'en la lista']],
-    number: [['gt', '>'], ['gte', '≥'], ['lt', '<'], ['lte', '≤'], ['eq', '='], ['between', 'entre']],
+    number: [['gt', '>'], ['gte', '≥'], ['lt', '<'], ['lte', '≤'], ['eq', '='], ['between', 'entre'], ['list', 'en la lista']],
     date: [['range', 'entre fechas']],
     boolean: [['eq', 'es']],
 };
@@ -39,6 +39,7 @@ export function FilterForm({ table: t }: { table: UseAttributeTable }) {
 
     const submit = (event: FormEvent): void => {
         event.preventDefault();
+        if (currentOp === 'list') return;
         const filter = buildFilter(column, currentOp, value, extra);
         if (filter) t.table.setFilter(column.name, filter);
     };
@@ -51,7 +52,9 @@ export function FilterForm({ table: t }: { table: UseAttributeTable }) {
             <select value={currentOp} onChange={event => setOp(event.target.value)} aria-label="Operador">
                 {ops.map(([key, label]) => <option key={key} value={key}>{label}</option>)}
             </select>
-            {column.family === 'boolean' ? (
+            {currentOp === 'list' ? (
+                <ListPicker key={column.name} table={t} column={column} />
+            ) : column.family === 'boolean' ? (
                 <select value={value} onChange={event => setValue(event.target.value)} aria-label="Valor">
                     <option value="true">sí</option>
                     <option value="false">no</option>
@@ -60,7 +63,7 @@ export function FilterForm({ table: t }: { table: UseAttributeTable }) {
                 <input type={type} value={value} onChange={event => setValue(event.target.value)} aria-label="Valor" />
             )}
             {range && <input type={type} value={extra} onChange={event => setExtra(event.target.value)} aria-label="Hasta" />}
-            <button type="submit">Filtrar</button>
+            {currentOp !== 'list' && <button type="submit">Filtrar</button>}
             {column.filter && <button type="button" onClick={() => t.table.setFilter(column.name, null)}>Quitar</button>}
         </form>
     );

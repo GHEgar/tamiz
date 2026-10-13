@@ -5,9 +5,31 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y 
 
 ## [No publicado]
 
+## [0.2.0] - 2026-10-13
+
+### Agregado
+
+- `fetchDistinct(column, { limit, search, applyQuery, scanSize })`: valores distintos de una columna
+  para el filtro de lista, con la estrategia de la opción `distinct`: `scan` (una página de esa sola
+  columna, por defecto), `wps` (`gs:PagedUnique` de GeoServer) o una función propia. Respeta el CQL
+  de la tabla salvo el filtro de la propia columna. Se exportan `scanDistinct` y `wpsDistinct`.
+- `WfsSource.wpsUrl` para cuando el endpoint WPS no se deduce del WFS.
+- `@ghegar/tamiz/react`: `useDistinctValues`.
+- `@ghegar/tamiz/ol`: `pick` acepta una función `(features, coordinate) => features`.
+- e2e con Playwright contra el demo y un GeoServer público (`npm run e2e`).
+- Workflow que publica el demo en GitHub Pages.
+
 ### Cambiado
 
 - El lint usa `@ghegar/eslint-config` (presets `base`, `react` y `ts`) en lugar de una config propia.
+- El clic en el mapa pide hasta `maxFeatures` en todos los modos y descarta los features cuya
+  geometría no toca el clic.
+
+### Corregido
+
+- Los filtros de texto escapan `%`, `_` y `\`: antes `%` y `_` funcionaban como comodines.
+- `pick: 'first'` toma el feature dibujado encima (el último del orden natural), no el primero que
+  devuelve GeoServer.
 
 ## [0.1.0] - 2026-10-09
 
