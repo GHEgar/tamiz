@@ -18,5 +18,15 @@ export default defineConfig({
     build: {
         outDir: fileURLToPath(new URL('../demo-dist', import.meta.url)),
         emptyOutDir: true,
+        rolldownOptions: {
+            output: {
+                codeSplitting: {
+                    groups: [
+                        { name: 'ol', test: /node_modules[\\/](ol|rbush|quickselect|earcut|color-|pbf)/, priority: 20 },
+                        { name: 'react', test: /node_modules[\\/](react|react-dom|scheduler)[\\/]/, priority: 10 },
+                    ],
+                },
+            },
+        },
     },
 });
