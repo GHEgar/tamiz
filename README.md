@@ -44,6 +44,10 @@ const url = table.downloadUrl({ format: 'shape-zip', filename: 'selection' });
 const { blob, filename } = await table.download({ format: 'csv' });
 ```
 
+GeoServer needs a `sortBy` to page tables without a primary key. `stableSort: true` sorts every page
+by the first field when the user has not picked a sort (or pass a field name); the snapshot's `sort`
+stays `null`.
+
 Nothing is fetched until `start()`. Several changes in the same tick become one request; a new query
 aborts the request in flight. Changing the query resets the page to 0. The total comes from
 `numberMatched` when the server sends it, or from a `resultType=hits` request.

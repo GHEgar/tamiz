@@ -58,6 +58,24 @@ describe('createAttributeTable', () => {
         expect(fake.requests.slice(before).some(request => request.params.resultType === 'hits')).toBe(false);
     });
 
+    it('keeps a stable order on every page when asked and nothing is sorted', async () => {
+        const { table, fake } = setup({ stableSort: true });
+        table.start();
+        await settle();
+        expect(fake.last()?.params.sortBy).toBe('clave ASC');
+        table.setPage(1);
+        await settle();
+        expect(fake.last()?.params.sortBy).toBe('clave ASC');
+        expect(table.getSnapshot().sort).toBeNull();
+        table.toggleSort('poblacion');
+        await settle();
+        expect(fake.last()?.params.sortBy).toBe('poblacion ASC');
+        const named = setup({ stableSort: 'nombre' });
+        named.table.start();
+        await settle();
+        expect(named.fake.last()?.params.sortBy).toBe('nombre ASC');
+    });
+
     it('batches several changes into one request and resets the page', async () => {
         const { table, fake, events } = setup();
         table.start();

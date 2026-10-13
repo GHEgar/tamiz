@@ -11,6 +11,8 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y 
 
 - Filtro `date` con `before`: límite superior exclusivo (`<`), para rangos semiabiertos como «antes
   del 1 de febrero».
+- Opción `stableSort` (`true` o un nombre de campo): ordena todas las páginas por ese campo cuando no
+  hay orden elegido, porque GeoServer pide `sortBy` para paginar tablas sin llave primaria.
 
 ### Cambiado
 

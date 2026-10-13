@@ -13,6 +13,7 @@ export interface TableOptions {
     idField?: string | null;
     baseCql?: string | null;
     sort?: Sort | null;
+    stableSort?: boolean | string;
     schema?: Schema;
     columns?: { order?: string[]; hidden?: string[]; labels?: Record<string, string> };
     labels?: Labels;
@@ -104,6 +105,12 @@ export const createAttributeTable = (options: TableOptions): AttributeTable => {
         };
     }
 
+    const stableSort = (schema: Schema): Sort | null => {
+        if (!options.stableSort) return null;
+        const field = typeof options.stableSort === 'string' ? options.stableSort : schema.fields[0]?.name;
+        return field ? { field, direction: 'asc' } : null;
+    };
+
     const fetchKey = (): string => JSON.stringify([snapshot.cql, state.sort, state.page, state.pageSize]);
 
     const set = (patch: Partial<State>): void => {
@@ -132,7 +139,7 @@ export const createAttributeTable = (options: TableOptions): AttributeTable => {
             }
             const cql = snapshot.cql;
             const collection = await getCollection(source, {
-                cql, propertyNames: schema.fields.map(field => field.name), sort: state.sort,
+                cql, propertyNames: schema.fields.map(field => field.name), sort: state.sort ?? stableSort(schema),
                 startIndex: state.page * state.pageSize, count: state.pageSize,
             }, signal);
             const rows = toRows(collection, idField);
