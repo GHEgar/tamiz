@@ -69,7 +69,7 @@ aborts the request in flight. Changing the query resets the page to 0. The total
 | `list` | `{ values }` | `col IN (…)` |
 | `text` | `{ op: 'contains' \| 'startsWith' \| 'endsWith' \| 'equals', value, caseSensitive? }` | `ILIKE` / `LIKE` |
 | `number` | `{ op: 'eq' \| 'ne' \| 'lt' \| 'lte' \| 'gt' \| 'gte', value }` or `{ op: 'between', min, max }` | comparison / `BETWEEN` |
-| `date` | `{ from?, to? }` (ISO strings) | `>=` / `<=` |
+| `date` | `{ from?, to?, before? }` (ISO strings; `before` is exclusive) | `>=` / `<=` / `<` |
 | `boolean` | `{ value }` | `col = true` |
 | `null` | `{ isNull }` | `IS NULL` / `IS NOT NULL` |
 

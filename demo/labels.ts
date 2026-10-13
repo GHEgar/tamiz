@@ -12,7 +12,7 @@ const filterLabel = (column: string, filter: ColumnFilter): string => {
         case 'number':
             return filter.op === 'between' ? `${column} entre ${filter.min} y ${filter.max}` : `${column} ${NUMBER_OPS[filter.op]} ${filter.value}`;
         case 'date':
-            return `${column}: ${filter.from ?? '…'} a ${filter.to ?? '…'}`;
+            return `${column}: ${filter.from ?? '…'} a ${filter.to ?? filter.before ?? '…'}`;
         case 'boolean':
             return `${column}: ${filter.value ? 'sí' : 'no'}`;
         case 'null':

@@ -46,7 +46,7 @@ export type TextFilter = { kind: 'text'; op: 'contains' | 'startsWith' | 'endsWi
 export type NumberFilter =
     | { kind: 'number'; op: 'eq' | 'ne' | 'lt' | 'lte' | 'gt' | 'gte'; value: number }
     | { kind: 'number'; op: 'between'; min: number; max: number };
-export type DateFilter = { kind: 'date'; from?: string; to?: string };
+export type DateFilter = { kind: 'date'; from?: string; to?: string; before?: string };
 export type BooleanFilter = { kind: 'boolean'; value: boolean };
 export type NullFilter = { kind: 'null'; isNull: boolean };
 

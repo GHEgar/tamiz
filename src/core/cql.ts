@@ -58,6 +58,7 @@ export const filterToCql = (column: string, filter: ColumnFilter): string | null
             const parts: string[] = [];
             if (!isBlank(filter.from)) parts.push(`${field} >= ${quoteString(filter.from as string)}`);
             if (!isBlank(filter.to)) parts.push(`${field} <= ${quoteString(filter.to as string)}`);
+            if (!isBlank(filter.before)) parts.push(`${field} < ${quoteString(filter.before as string)}`);
             return parts.length === 0 ? null : parts.join(' AND ');
         }
         case 'boolean':
@@ -105,6 +106,8 @@ export const defaultFilterLabel: FilterLabel = (column, filter) => {
                 : `${column} ${NUMBER_OPERATORS[filter.op]} ${filter.value}`;
         case 'date':
             if (filter.from && filter.to) return `${column}: ${filter.from}–${filter.to}`;
+            if (filter.from && filter.before) return `${column}: ${filter.from}–<${filter.before}`;
+            if (filter.before) return `${column} < ${filter.before}`;
             return filter.from ? `${column} ≥ ${filter.from}` : `${column} ≤ ${filter.to ?? ''}`;
         case 'boolean':
             return `${column}: ${filter.value ? 'yes' : 'no'}`;

@@ -42,6 +42,8 @@ describe('cql', () => {
         expect(filterToCql('p', { kind: 'number', op: 'eq', value: Number.NaN })).toBeNull();
         expect(filterToCql('f', { kind: 'date', from: '2026-01-01' })).toBe("f >= '2026-01-01'");
         expect(filterToCql('f', { kind: 'date', from: '2026-01-01', to: '2026-02-01' })).toBe("f >= '2026-01-01' AND f <= '2026-02-01'");
+        expect(filterToCql('f', { kind: 'date', from: '2026-01-01', before: '2026-02-01' })).toBe("f >= '2026-01-01' AND f < '2026-02-01'");
+        expect(defaultFilterLabel('f', { kind: 'date', before: '2026-02-01' })).toBe('f < 2026-02-01');
         expect(filterToCql('b', { kind: 'boolean', value: false })).toBe('b = false');
         expect(filterToCql('b', { kind: 'null', isNull: true })).toBe('b IS NULL');
         expect(isEmptyFilter({ kind: 'date' })).toBe(true);

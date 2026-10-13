@@ -5,6 +5,13 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y 
 
 ## [No publicado]
 
+## [0.3.0] - 2026-10-13
+
+### Agregado
+
+- Filtro `date` con `before`: límite superior exclusivo (`<`), para rangos semiabiertos como «antes
+  del 1 de febrero».
+
 ### Cambiado
 
 - El build del demo separa OpenLayers y React en chunks propios; ninguno pasa de 500 kB.
