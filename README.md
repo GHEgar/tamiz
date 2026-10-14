@@ -1,9 +1,21 @@
-# tamiz
+# <picture><source media="(prefers-color-scheme: dark)" srcset=".github/assets/icon-dark.svg"><img src=".github/assets/icon-light.svg" width="36" height="36" alt=""></picture> tamiz
 
-Headless attribute table for WFS layers served by GeoServer. tamiz owns the state — schema, paging,
-sorting, column filters turned into CQL, hand-written CQL, column visibility and order, selection,
-downloads — and you own every pixel: it ships no styles, only state, events and ARIA/`data-*`
-attributes. An optional bridge keeps the selection in sync with an OpenLayers map.
+[![npm](https://img.shields.io/npm/v/@ghegar/tamiz)](https://www.npmjs.com/package/@ghegar/tamiz)
+[![size](https://img.shields.io/bundlejs/size/@ghegar/tamiz)](https://bundlejs.com/?q=@ghegar/tamiz)
+[![license](https://img.shields.io/github/license/GHEgar/tamiz)](LICENSE)
+
+Headless attribute table for WFS/GeoServer layers: CQL filters, paging, download and selection synced with OpenLayers.
+
+![A table of US states sorted, filtered by name and selected from the table and from the map](.github/assets/demo.gif)
+
+**[Live demo](https://ghegar.github.io/tamiz/)**
+
+tamiz owns the state — schema, paging, sorting, column filters turned into CQL, hand-written CQL,
+column visibility and order, selection, downloads — and you own every pixel: it ships no styles, only
+state, events and ARIA/`data-*` attributes. An optional bridge keeps the selection in sync with an
+OpenLayers map.
+
+## Install
 
 ```bash
 npm install @ghegar/tamiz
@@ -14,6 +26,24 @@ npm install @ghegar/tamiz
 | `@ghegar/tamiz` | Framework-free core: WFS client, CQL builder, table store | nothing |
 | `@ghegar/tamiz/react` | `useAttributeTable` with prop getters, `useDistinctValues` | `react >= 19` |
 | `@ghegar/tamiz/ol` | `bindOlSelection`: highlight, click to select, zoom to selection | `ol >= 10` |
+
+## Quick start
+
+```ts
+import { createAttributeTable } from '@ghegar/tamiz';
+import { bindOlSelection } from '@ghegar/tamiz/ol';
+
+const table = createAttributeTable({
+    source: { url: 'https://example.org/geoserver/wfs', typeName: 'ws:municipalities', version: '2.0.0' },
+    pageSize: 50,
+});
+
+table.subscribe(() => render(table.getSnapshot()));
+table.start();
+
+table.setFilter('population', { kind: 'number', op: 'gt', value: 10000 });
+bindOlSelection(table, map, { style: { 'stroke-color': '#e4572e', 'stroke-width': 3 } });
+```
 
 ## Core
 
@@ -44,13 +74,15 @@ const url = table.downloadUrl({ format: 'shape-zip', filename: 'selection' });
 const { blob, filename } = await table.download({ format: 'csv' });
 ```
 
-GeoServer needs a `sortBy` to page tables without a primary key. `stableSort: true` sorts every page
-by the first field when the user has not picked a sort (or pass a field name); the snapshot's `sort`
-stays `null`.
+### Requests and paging
 
 Nothing is fetched until `start()`. Several changes in the same tick become one request; a new query
 aborts the request in flight. Changing the query resets the page to 0. The total comes from
 `numberMatched` when the server sends it, or from a `resultType=hits` request.
+
+GeoServer needs a `sortBy` to page tables without a primary key. `stableSort: true` sorts every page
+by the first field when the user has not picked a sort (or pass a field name); the snapshot's `sort`
+stays `null`.
 
 ### Snapshot
 
@@ -79,6 +111,8 @@ aborts the request in flight. Changing the query resets the page to 0. The total
 
 Text filters escape `%`, `_` and `\`, so they match those characters literally. Use a hand-written
 CQL when you need wildcards.
+
+### Composing the CQL
 
 A hand-written CQL (`setCql`) replaces the column filters until it is removed; they are kept and come
 back. `baseCql` is the condition the table inherits (for example, the map's filters) and it is never
@@ -167,17 +201,38 @@ selection; Ctrl, ⌘ or Shift toggle. It asks for up to `maxFeatures` (50) featu
 whose geometry touches the click. `pick: 'first'` (default) takes the one drawn on top: the WMS paints
 in the layer's natural order, so that is the last one returned. `pick: 'all'` takes every touched
 feature, and a function `(features, coordinate) => features` decides for styles that reorder with
-`sortBy` or z-order. With more than `maxFeatures` features under the click, the one on top may not be
-among them. It does not touch your WMS layer: pass `snapshot.cql` to its
-`CQL_FILTER` if the map should follow the table.
+`sortBy` or z-order. It does not touch your WMS layer: pass `snapshot.cql` to its `CQL_FILTER` if the
+map should follow the table.
 
-## Demo
+## Known limitations
 
-Live at <https://ghegar.github.io/tamiz/>. `npm run demo` opens a table and a map against a public
-GeoServer (`topp:states`). Point it at another server with `?wfs=…&type=ws:layer&version=1.1.0&wms=…`,
-and ask distinct values through WPS with `?distinct=wps`. `npm run e2e` runs Playwright against the
-demo and that live server.
+- Built for GeoServer WFS 2.0.0 and 1.1.0: `CQL_FILTER` is a GeoServer vendor parameter.
+- Without a primary key GeoServer cannot page unless every request has a `sortBy`: use `stableSort`.
+- `'scan'` distinct values can come out short when one page is full of repeated values; `'wps'` needs
+  the WPS extension and, with `limit`, returns an arbitrary subset.
+- With more than `maxFeatures` features under a map click, the one on top may not be among them.
+- In WFS 2.0 with `EPSG:4326` GeoServer answers in lat/lon order. The bridge always asks for the view
+  projection, so it is not affected; a request in `EPSG:4326` made by hand is.
+- Virtualizing long pages is up to you.
+
+## Development
+
+```bash
+npm test
+npm run lint
+npm run typecheck
+npm run demo
+npm run e2e
+```
+
+The demo opens a table and a map against a public GeoServer (`topp:states`). Point it at another
+server with `?wfs=…&type=ws:layer&version=1.1.0&wms=…`, and ask distinct values through WPS with
+`?distinct=wps`. `npm run e2e` runs Playwright against the demo and that live server.
+
+## Contributing
+
+Issues are welcome. Open one before sending a pull request.
 
 ## License
 
-AGPL-3.0-only.
+AGPL-3.0-only © GHEgar
