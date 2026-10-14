@@ -1,6 +1,6 @@
-import base from '@ghegar/eslint-config';
-import react from '@ghegar/eslint-config/react';
-import ts from '@ghegar/eslint-config/ts';
+import base from '@npmegar/eslint-config';
+import react from '@npmegar/eslint-config/react';
+import ts from '@npmegar/eslint-config/ts';
 
 export default [
     { ignores: ['demo-dist/'] },
