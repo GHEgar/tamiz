@@ -50,7 +50,7 @@ export function MapView({ table, wms, typeName, cql }: MapViewProps) {
     return (
         <section className="map">
             <div ref={target} className="map-target" data-testid="map" />
-            <button type="button" className="zoom" onClick={() => binding?.zoomToSelection()}>Zoom a la selección</button>
+            <button type="button" className="zoom" onClick={() => binding?.zoomToSelection()}>Zoom to selection</button>
         </section>
     );
 }

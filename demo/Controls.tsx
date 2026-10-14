@@ -22,10 +22,10 @@ function CqlEditor({ initial, onApply }: { initial: string; onApply: (cql: strin
                 onChange={event => setDraft(event.target.value)}
                 rows={2}
                 spellCheck={false}
-                aria-label="Expresión CQL"
+                aria-label="CQL expression"
                 data-testid="cql"
             />
-            <button type="button" onClick={() => onApply(draft)}>Aplicar CQL</button>
+            <button type="button" onClick={() => onApply(draft)}>Apply CQL</button>
         </div>
     );
 }
@@ -51,31 +51,31 @@ export function Controls({ table: t }: { table: UseAttributeTable }) {
                     <span key={chip.key} className="chip" data-source={chip.source}>
                         {chip.label}
                         {chip.removable && (
-                            <button type="button" aria-label={`Quitar ${chip.label}`} onClick={() => t.table.removeChip(chip.key)}>✕</button>
+                            <button type="button" aria-label={`Remove ${chip.label}`} onClick={() => t.table.removeChip(chip.key)}>✕</button>
                         )}
                     </span>
                 ))}
-                {t.chips.length === 0 && <span className="muted">Sin filtros</span>}
+                {t.chips.length === 0 && <span className="muted">No filters</span>}
             </div>
             <CqlEditor key={source} initial={source} onApply={cql => t.table.setCql(cql)} />
             <div className="row">
                 <details>
-                    <summary>Columnas ({t.visibleColumns.length}/{t.columns.length})</summary>
+                    <summary>Columns ({t.visibleColumns.length}/{t.columns.length})</summary>
                     <div className="columns">
                         {t.columns.map((column, index) => (
                             <label key={column.name}>
                                 <input {...t.getColumnToggleProps(column)} />
                                 {column.label}
-                                <button type="button" aria-label={`Subir ${column.label}`} disabled={index === 0} onClick={() => t.table.moveColumn(column.name, index - 1)}>↑</button>
+                                <button type="button" aria-label={`Move ${column.label} up`} disabled={index === 0} onClick={() => t.table.moveColumn(column.name, index - 1)}>↑</button>
                             </label>
                         ))}
                     </div>
                 </details>
                 <label>
                     <input type="checkbox" checked={t.onlySelected} onChange={event => t.table.setOnlySelected(event.target.checked)} />
-                    Solo seleccionados ({t.selection.size})
+                    Selected only ({t.selection.size})
                 </label>
-                <button type="button" disabled={t.selection.size === 0} onClick={() => t.table.clearSelection()}>Limpiar selección</button>
+                <button type="button" disabled={t.selection.size === 0} onClick={() => t.table.clearSelection()}>Clear selection</button>
                 <span className="spacer" />
                 {FORMATS.map(format => (
                     <button key={format} type="button" disabled={busy !== null} onClick={() => void download(format)}>
@@ -86,8 +86,8 @@ export function Controls({ table: t }: { table: UseAttributeTable }) {
             <div className="row pager" data-testid="pager">
                 <button type="button" disabled={t.page === 0} onClick={() => t.table.setPage(t.page - 1)}>‹</button>
                 <span>
-                    Página {t.page + 1} de {t.pageCount ?? '…'} · {t.total ?? '…'} registros
-                    {t.status === 'loading' ? ' · cargando' : ''}
+                    Page {t.page + 1} of {t.pageCount ?? '…'} · {t.total ?? '…'} records
+                    {t.status === 'loading' ? ' · loading' : ''}
                 </span>
                 <button type="button" disabled={t.pageCount === null || t.page + 1 >= t.pageCount} onClick={() => t.table.setPage(t.page + 1)}>›</button>
             </div>

@@ -35,17 +35,17 @@ async function clickMap(page: Page, lon: number, lat: number, modifier?: 'Contro
     }
 }
 
-const total = (page: Page, count: number) => expect(page.getByTestId('pager')).toContainText(`· ${count} registros`);
+const total = (page: Page, count: number) => expect(page.getByTestId('pager')).toContainText(`· ${count} records`);
 
 const selected = (page: Page, count: number) =>
-    expect(page.getByRole('checkbox', { name: /Solo seleccionados/ })).toHaveAccessibleName(`Solo seleccionados (${count})`);
+    expect(page.getByRole('checkbox', { name: /Selected only/ })).toHaveAccessibleName(`Selected only (${count})`);
 
 async function filterBy(page: Page, column: string, op: string, value?: string) {
-    await page.getByLabel('Columna').selectOption(column);
-    await page.getByLabel('Operador').selectOption(op);
+    await page.getByLabel('Column').selectOption(column);
+    await page.getByLabel('Operator').selectOption(op);
     if (value !== undefined) {
-        await page.getByLabel('Valor').fill(value);
-        await page.getByRole('button', { name: 'Filtrar', exact: true }).click();
+        await page.getByLabel('Value').fill(value);
+        await page.getByRole('button', { name: 'Filter', exact: true }).click();
     }
 }
 
@@ -65,7 +65,7 @@ test('sorts and pages the layer', async ({ page }) => {
     await header.click();
     await expect(names(page).first()).toHaveText('Wyoming');
     await page.getByTestId('pager').getByRole('button', { name: '›' }).click();
-    await expect(page.getByTestId('pager')).toContainText('Página 2 de 2');
+    await expect(page.getByTestId('pager')).toContainText('Page 2 of 2');
     await expect(names(page)).toHaveCount(24);
 });
 
@@ -76,7 +76,7 @@ test('escapes wildcards in text filters', async ({ page }) => {
     await total(page, 0);
     await filterBy(page, 'STATE_NAME', 'contains', 'new');
     await total(page, 4);
-    await expect(page.getByTestId('chips')).toContainText('STATE_NAME contiene «new»');
+    await expect(page.getByTestId('chips')).toContainText('STATE_NAME contains “new”');
 });
 
 test('offers distinct values for the list filter', async ({ page }) => {
@@ -85,10 +85,10 @@ test('offers distinct values for the list filter', async ({ page }) => {
     await expect(list).toHaveAttribute('data-status', 'ready');
     await expect(list.getByRole('checkbox')).toHaveCount(9);
     await list.getByLabel('Pacific').check();
-    await list.getByLabel('Buscar valor').fill('mt');
+    await list.getByLabel('Search value').fill('mt');
     await expect(list.getByRole('checkbox')).toHaveCount(1);
     await list.getByLabel('Mtn').check();
-    await list.getByRole('button', { name: 'Filtrar (2)' }).click();
+    await list.getByRole('button', { name: 'Filter (2)' }).click();
     await total(page, 11);
 });
 
@@ -104,9 +104,9 @@ test('asks distinct values through WPS', async ({ page }) => {
 test('applies custom CQL and the WMS follows it', async ({ page }) => {
     const wms = page.waitForRequest(request => request.url().includes('/wms') && request.url().includes('CQL_FILTER=PERSONS'));
     await page.getByTestId('cql').fill('PERSONS > 10000000');
-    await page.getByRole('button', { name: 'Aplicar CQL' }).click();
+    await page.getByRole('button', { name: 'Apply CQL' }).click();
     await total(page, 6);
-    await expect(page.getByTestId('chips')).toContainText('CQL propio');
+    await expect(page.getByTestId('chips')).toContainText('Custom CQL');
     await wms;
 });
 
@@ -119,7 +119,7 @@ test('selects on the map with click, Ctrl and Shift', async ({ page }) => {
     await selected(page, 3);
     await clickMap(page, -99.5, 41.5, 'Control');
     await selected(page, 2);
-    await page.getByRole('checkbox', { name: /Solo seleccionados/ }).check();
+    await page.getByRole('checkbox', { name: /Selected only/ }).check();
     await total(page, 2);
     await expect(names(page)).toHaveText(['Kansas', 'Texas']);
     await clickMap(page, -99, 31.5);

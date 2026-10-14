@@ -34,7 +34,7 @@ function App() {
                 <strong>tamiz</strong>
                 <span>{SOURCE.typeName}</span>
                 <span className="muted">{SOURCE.url}</span>
-                <span className="muted">valores: {DISTINCT}</span>
+                <span className="muted">values: {DISTINCT}</span>
             </header>
             <MapView table={table} wms={WMS} typeName={SOURCE.typeName} cql={t.cql} />
             <section className="table">

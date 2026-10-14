@@ -19,10 +19,10 @@ const buildFilter = (column: Column, op: string, value: string, extra: string): 
 };
 
 const OPS: Record<Column['family'], [string, string][]> = {
-    text: [['contains', 'contiene'], ['startsWith', 'empieza con'], ['equals', 'es'], ['list', 'en la lista']],
-    number: [['gt', '>'], ['gte', '≥'], ['lt', '<'], ['lte', '≤'], ['eq', '='], ['between', 'entre'], ['list', 'en la lista']],
-    date: [['range', 'entre fechas']],
-    boolean: [['eq', 'es']],
+    text: [['contains', 'contains'], ['startsWith', 'starts with'], ['equals', 'is'], ['list', 'in list']],
+    number: [['gt', '>'], ['gte', '≥'], ['lt', '<'], ['lte', '≤'], ['eq', '='], ['between', 'between'], ['list', 'in list']],
+    date: [['range', 'between dates']],
+    boolean: [['eq', 'is']],
 };
 
 export function FilterForm({ table: t }: { table: UseAttributeTable }) {
@@ -46,25 +46,25 @@ export function FilterForm({ table: t }: { table: UseAttributeTable }) {
 
     return (
         <form className="row filter" onSubmit={submit} data-testid="filter">
-            <select value={column.name} onChange={event => setName(event.target.value)} aria-label="Columna">
+            <select value={column.name} onChange={event => setName(event.target.value)} aria-label="Column">
                 {t.columns.map(item => <option key={item.name} value={item.name}>{item.label}</option>)}
             </select>
-            <select value={currentOp} onChange={event => setOp(event.target.value)} aria-label="Operador">
+            <select value={currentOp} onChange={event => setOp(event.target.value)} aria-label="Operator">
                 {ops.map(([key, label]) => <option key={key} value={key}>{label}</option>)}
             </select>
             {currentOp === 'list' ? (
                 <ListPicker key={column.name} table={t} column={column} />
             ) : column.family === 'boolean' ? (
-                <select value={value} onChange={event => setValue(event.target.value)} aria-label="Valor">
-                    <option value="true">sí</option>
+                <select value={value} onChange={event => setValue(event.target.value)} aria-label="Value">
+                    <option value="true">yes</option>
                     <option value="false">no</option>
                 </select>
             ) : (
-                <input type={type} value={value} onChange={event => setValue(event.target.value)} aria-label="Valor" />
+                <input type={type} value={value} onChange={event => setValue(event.target.value)} aria-label="Value" />
             )}
-            {range && <input type={type} value={extra} onChange={event => setExtra(event.target.value)} aria-label="Hasta" />}
-            {currentOp !== 'list' && <button type="submit">Filtrar</button>}
-            {column.filter && <button type="button" onClick={() => t.table.setFilter(column.name, null)}>Quitar</button>}
+            {range && <input type={type} value={extra} onChange={event => setExtra(event.target.value)} aria-label="To" />}
+            {currentOp !== 'list' && <button type="submit">Filter</button>}
+            {column.filter && <button type="button" onClick={() => t.table.setFilter(column.name, null)}>Remove</button>}
         </form>
     );
 }

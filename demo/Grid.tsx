@@ -4,7 +4,7 @@ const ARROWS = { asc: ' ▲', desc: ' ▼' } as const;
 
 const format = (value: unknown): string => {
     if (value === null || value === undefined) return '—';
-    if (typeof value === 'number') return value.toLocaleString('es-MX');
+    if (typeof value === 'number') return value.toLocaleString('en-US');
     return String(value);
 };
 

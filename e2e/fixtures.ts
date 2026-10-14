@@ -1,6 +1,6 @@
 import { chromium, test as base, type Browser } from '@playwright/test';
 
-const CDP = 'http://127.0.0.1:9222';
+const CDP = process.env.CDP_URL ?? 'http://127.0.0.1:9222';
 
 async function cdpAvailable(): Promise<boolean> {
     try {

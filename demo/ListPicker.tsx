@@ -15,7 +15,7 @@ export function ListPicker({ table: t, column }: { table: UseAttributeTable; col
 
     return (
         <div className="list-picker" data-testid="list" data-status={distinct.status}>
-            <input value={search} onChange={event => setSearch(event.target.value)} placeholder="Buscar" aria-label="Buscar valor" />
+            <input value={search} onChange={event => setSearch(event.target.value)} placeholder="Search" aria-label="Search value" />
             <div className="list-values">
                 {distinct.values.map(value => (
                     <label key={String(value)}>
@@ -23,12 +23,12 @@ export function ListPicker({ table: t, column }: { table: UseAttributeTable; col
                         {String(value)}
                     </label>
                 ))}
-                {distinct.status === 'loading' && <span className="muted">cargando…</span>}
-                {distinct.status === 'ready' && !distinct.complete && <span className="muted">lista parcial</span>}
+                {distinct.status === 'loading' && <span className="muted">loading…</span>}
+                {distinct.status === 'ready' && !distinct.complete && <span className="muted">partial list</span>}
                 {distinct.status === 'error' && <span className="error">{distinct.error?.message}</span>}
             </div>
             <button type="button" disabled={chosen.length === 0} onClick={() => t.table.setFilter(column.name, { kind: 'list', values: chosen })}>
-                Filtrar ({chosen.length})
+                Filter ({chosen.length})
             </button>
         </div>
     );
