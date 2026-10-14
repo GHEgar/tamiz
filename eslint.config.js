@@ -3,7 +3,7 @@ import react from '@ghegar/eslint-config/react';
 import ts from '@ghegar/eslint-config/ts';
 
 export default [
-    { ignores: ['demo-dist/', 'test-results/', 'playwright-report/'] },
+    { ignores: ['demo-dist/'] },
     ...base,
     ...react,
     ...ts,
