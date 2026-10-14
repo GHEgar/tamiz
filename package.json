@@ -2,6 +2,17 @@
     "name": "@ghegar/tamiz",
     "version": "0.3.0",
     "description": "Headless attribute table for WFS/GeoServer layers: CQL filters, paging, download and selection synced with OpenLayers.",
+    "keywords": [
+        "openlayers",
+        "wfs",
+        "geoserver",
+        "attribute-table",
+        "cql",
+        "table",
+        "headless",
+        "react",
+        "gis"
+    ],
     "license": "AGPL-3.0-only",
     "author": "Edgar Villarreal",
     "type": "module",
