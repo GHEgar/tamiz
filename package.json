@@ -62,7 +62,6 @@
     },
     "devDependencies": {
         "@npmegar/eslint-config": "^0.4.0",
-        "@npmegar/rotulo": "^0.1.0",
         "@playwright/test": "^1.64.0",
         "@testing-library/react": "^16.3.3",
         "@types/react": "^19.3.0",
@@ -75,6 +74,7 @@
         "ol": "^10.11.0",
         "react": "^19.3.0",
         "react-dom": "^19.3.0",
+        "rotulo": "^0.1.1",
         "tesela": "^0.3.0",
         "typescript": "~6.0.3",
         "typescript-eslint": "^8.71.1",
