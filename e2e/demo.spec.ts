@@ -64,7 +64,7 @@ test('sorts and pages the layer', async ({ page }) => {
     await expect(names(page).first()).toHaveText('Arizona');
     await header.click();
     await expect(names(page).first()).toHaveText('Wyoming');
-    await page.getByTestId('pager').getByRole('button', { name: '›' }).click();
+    await page.getByTestId('pager').getByRole('button', { name: 'Next page' }).click();
     await expect(page.getByTestId('pager')).toContainText('Page 2 of 2');
     await expect(names(page)).toHaveCount(24);
 });

@@ -1,6 +1,5 @@
+import { ChevronDown, ChevronUp } from 'tesela/react';
 import type { UseAttributeTable } from '@ghegar/tamiz/react';
-
-const ARROWS = { asc: ' ▲', desc: ' ▼' } as const;
 
 const format = (value: unknown): string => {
     if (value === null || value === undefined) return '—';
@@ -17,7 +16,8 @@ export function Grid({ table: t }: { table: UseAttributeTable }) {
                         {t.visibleColumns.map(column => (
                             <th key={column.name} {...t.getHeaderProps(column)}>
                                 {column.label}
-                                {column.sort ? ARROWS[column.sort] : ''}
+                                {column.sort === 'asc' && <ChevronUp size={12} className="sort" />}
+                                {column.sort === 'desc' && <ChevronDown size={12} className="sort" />}
                             </th>
                         ))}
                     </tr>

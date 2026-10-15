@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { ChevronLeft, ChevronRight, ChevronUp, Close } from 'tesela/react';
 import type { DownloadFormat } from '@ghegar/tamiz';
 import type { UseAttributeTable } from '@ghegar/tamiz/react';
 
@@ -51,7 +52,7 @@ export function Controls({ table: t }: { table: UseAttributeTable }) {
                     <span key={chip.key} className="chip" data-source={chip.source}>
                         {chip.label}
                         {chip.removable && (
-                            <button type="button" aria-label={`Remove ${chip.label}`} onClick={() => t.table.removeChip(chip.key)}>✕</button>
+                            <button type="button" aria-label={`Remove ${chip.label}`} onClick={() => t.table.removeChip(chip.key)}><Close size={12} /></button>
                         )}
                     </span>
                 ))}
@@ -66,7 +67,7 @@ export function Controls({ table: t }: { table: UseAttributeTable }) {
                             <label key={column.name}>
                                 <input {...t.getColumnToggleProps(column)} />
                                 {column.label}
-                                <button type="button" aria-label={`Move ${column.label} up`} disabled={index === 0} onClick={() => t.table.moveColumn(column.name, index - 1)}>↑</button>
+                                <button type="button" aria-label={`Move ${column.label} up`} disabled={index === 0} onClick={() => t.table.moveColumn(column.name, index - 1)}><ChevronUp size={14} /></button>
                             </label>
                         ))}
                     </div>
@@ -84,12 +85,12 @@ export function Controls({ table: t }: { table: UseAttributeTable }) {
                 ))}
             </div>
             <div className="row pager" data-testid="pager">
-                <button type="button" disabled={t.page === 0} onClick={() => t.table.setPage(t.page - 1)}>‹</button>
+                <button type="button" aria-label="Previous page" disabled={t.page === 0} onClick={() => t.table.setPage(t.page - 1)}><ChevronLeft size={14} /></button>
                 <span>
                     Page {t.page + 1} of {t.pageCount ?? '…'} · {t.total ?? '…'} records
                     {t.status === 'loading' ? ' · loading' : ''}
                 </span>
-                <button type="button" disabled={t.pageCount === null || t.page + 1 >= t.pageCount} onClick={() => t.table.setPage(t.page + 1)}>›</button>
+                <button type="button" aria-label="Next page" disabled={t.pageCount === null || t.page + 1 >= t.pageCount} onClick={() => t.table.setPage(t.page + 1)}><ChevronRight size={14} /></button>
             </div>
         </div>
     );

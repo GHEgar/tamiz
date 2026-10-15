@@ -21,6 +21,17 @@ button {
     cursor: pointer;
 }
 
+button svg {
+    display: block;
+    margin: 2px 0;
+}
+
+.grid th .sort {
+    display: inline-block;
+    margin-left: 4px;
+    vertical-align: -1px;
+}
+
 button:disabled {
     opacity: 0.45;
     cursor: default;
