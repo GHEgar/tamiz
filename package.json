@@ -74,7 +74,7 @@
         "ol": "^10.11.0",
         "react": "^19.3.0",
         "react-dom": "^19.3.0",
-        "rotulo": "^0.1.1",
+        "rotulo": "^0.2.0",
         "tesela": "^0.3.0",
         "typescript": "~6.0.3",
         "typescript-eslint": "^8.71.1",
