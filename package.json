@@ -1,5 +1,5 @@
 {
-    "name": "@ghegar/tamiz",
+    "name": "@npmegar/tamiz",
     "version": "0.3.0",
     "description": "Headless attribute table for WFS/GeoServer layers: CQL filters, paging, download and selection synced with OpenLayers.",
     "keywords": [
@@ -85,5 +85,8 @@
         "eslint-plugin-jsx-a11y": {
             "eslint": "$eslint"
         }
+    },
+    "publishConfig": {
+        "access": "public"
     }
 }

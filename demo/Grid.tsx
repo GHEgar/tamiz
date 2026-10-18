@@ -1,5 +1,5 @@
 import { ChevronDown, ChevronUp } from 'tesela/react';
-import type { UseAttributeTable } from '@ghegar/tamiz/react';
+import type { UseAttributeTable } from '@npmegar/tamiz/react';
 
 const format = (value: unknown): string => {
     if (value === null || value === undefined) return '—';

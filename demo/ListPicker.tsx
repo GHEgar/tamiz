@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import type { Column, Scalar } from '@ghegar/tamiz';
-import { useDistinctValues, type UseAttributeTable } from '@ghegar/tamiz/react';
+import type { Column, Scalar } from '@npmegar/tamiz';
+import { useDistinctValues, type UseAttributeTable } from '@npmegar/tamiz/react';
 
 const initial = (column: Column): Scalar[] => (column.filter?.kind === 'list' ? column.filter.values : []);
 

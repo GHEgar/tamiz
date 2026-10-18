@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { ChevronLeft, ChevronRight, ChevronUp, Close } from 'tesela/react';
-import type { DownloadFormat } from '@ghegar/tamiz';
-import type { UseAttributeTable } from '@ghegar/tamiz/react';
+import type { DownloadFormat } from '@npmegar/tamiz';
+import type { UseAttributeTable } from '@npmegar/tamiz/react';
 
 const FORMATS: DownloadFormat[] = ['csv', 'json', 'shape-zip', 'kml'];
 

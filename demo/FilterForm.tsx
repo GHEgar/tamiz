@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
-import type { Column, ColumnFilter } from '@ghegar/tamiz';
-import type { UseAttributeTable } from '@ghegar/tamiz/react';
+import type { Column, ColumnFilter } from '@npmegar/tamiz';
+import type { UseAttributeTable } from '@npmegar/tamiz/react';
 import { ListPicker } from './ListPicker';
 
 const buildFilter = (column: Column, op: string, value: string, extra: string): ColumnFilter | null => {

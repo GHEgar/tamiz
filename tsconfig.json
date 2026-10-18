@@ -17,13 +17,13 @@
         "skipLibCheck": true,
         "types": [],
         "paths": {
-            "@ghegar/tamiz/react": [
+            "@npmegar/tamiz/react": [
                 "./src/react/index.ts"
             ],
-            "@ghegar/tamiz/ol": [
+            "@npmegar/tamiz/ol": [
                 "./src/ol/index.ts"
             ],
-            "@ghegar/tamiz": [
+            "@npmegar/tamiz": [
                 "./src/core/index.ts"
             ]
         }

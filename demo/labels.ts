@@ -1,4 +1,4 @@
-import type { ColumnFilter, Labels } from '@ghegar/tamiz';
+import type { ColumnFilter, Labels } from '@npmegar/tamiz';
 
 const TEXT_OPS = { contains: 'contains', startsWith: 'starts with', endsWith: 'ends with', equals: 'is' } as const;
 const NUMBER_OPS = { eq: '=', ne: '≠', lt: '<', lte: '≤', gt: '>', gte: '≥' } as const;

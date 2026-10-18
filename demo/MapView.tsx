@@ -6,8 +6,8 @@ import OSM from 'ol/source/OSM.js';
 import TileWMS from 'ol/source/TileWMS.js';
 import { fromLonLat } from 'ol/proj.js';
 import 'ol/ol.css';
-import type { AttributeTable } from '@ghegar/tamiz';
-import { bindOlSelection, type OlSelection } from '@ghegar/tamiz/ol';
+import type { AttributeTable } from '@npmegar/tamiz';
+import { bindOlSelection, type OlSelection } from '@npmegar/tamiz/ol';
 
 interface MapViewProps {
     table: AttributeTable;

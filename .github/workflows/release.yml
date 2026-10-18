@@ -1,0 +1,83 @@
+name: release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Tag to publish, for example v0.3.0
+        required: true
+
+permissions:
+  contents: write
+  id-token: write
+  packages: write
+
+env:
+  TAG: ${{ inputs.tag || github.ref_name }}
+
+jobs:
+  npm:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ env.TAG }}
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          registry-url: https://registry.npmjs.org
+      - run: npm install -g npm@^11.5.1
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+      - name: Tag and package.json agree
+        run: test "v$(node -p "require('./package.json').version")" = "$TAG"
+      - name: Release notes from the changelog
+        run: awk -v v="${TAG#v}" 'index($0, "## [" v "]") == 1 { on = 1; next } on && /^## \[/ { exit } on' docs/CHANGELOG.md > notes.md
+      - name: GitHub release
+        run: gh release view "$TAG" > /dev/null 2>&1 || gh release create "$TAG" --title "tamiz ${TAG#v}" --notes-file notes.md --verify-tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+      - name: npm
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          name=$(node -p "require('./package.json').name")
+          if [ "$name" != "@npmegar/tamiz" ]; then
+            echo "$name ${TAG#v} was never published to npm"
+            exit 0
+          fi
+          npm view "$name@${TAG#v}" version > /dev/null 2>&1 && exit 0
+          latest=$(npm view "$name" dist-tags.latest 2>/dev/null || true)
+          tag=latest
+          if [ -n "$latest" ] && [ "$(printf '%s\n%s\n' "$latest" "${TAG#v}" | sort -V | tail -1)" != "${TAG#v}" ]; then tag=previous; fi
+          npm publish --provenance --access public --tag "$tag"
+
+  github-packages:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ env.TAG }}
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          registry-url: https://npm.pkg.github.com
+          scope: '@ghegar'
+      - run: npm ci
+      - run: npm run build
+      - run: npm pkg set name=@ghegar/tamiz
+      - run: npm pkg delete publishConfig
+      - name: GitHub Packages
+        run: |
+          npm view "@ghegar/tamiz@${TAG#v}" version > /dev/null 2>&1 && exit 0
+          latest=$(npm view "@ghegar/tamiz" dist-tags.latest 2>/dev/null || true)
+          tag=latest
+          if [ -n "$latest" ] && [ "$(printf '%s\n%s\n' "$latest" "${TAG#v}" | sort -V | tail -1)" != "${TAG#v}" ]; then tag=previous; fi
+          npm publish --tag "$tag"
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,7 +1,7 @@
 # <picture><source media="(prefers-color-scheme: dark)" srcset=".github/assets/icon-dark.svg"><img src=".github/assets/icon-light.svg" width="36" height="36" alt=""></picture> tamiz
 
-[![npm](https://img.shields.io/npm/v/@ghegar/tamiz)](https://www.npmjs.com/package/@ghegar/tamiz)
-[![size](https://img.shields.io/bundlejs/size/@ghegar/tamiz)](https://bundlejs.com/?q=@ghegar/tamiz)
+[![npm](https://img.shields.io/npm/v/@npmegar/tamiz)](https://www.npmjs.com/package/@npmegar/tamiz)
+[![size](https://img.shields.io/bundlejs/size/@npmegar/tamiz)](https://bundlejs.com/?q=@npmegar/tamiz)
 [![license](https://img.shields.io/github/license/GHEgar/tamiz)](LICENSE)
 
 Headless attribute table for WFS/GeoServer layers: CQL filters, paging, download and selection synced with OpenLayers.
@@ -18,20 +18,20 @@ OpenLayers map.
 ## Install
 
 ```bash
-npm install @ghegar/tamiz
+npm install @npmegar/tamiz
 ```
 
 | Entry | What it is | Needs |
 |---|---|---|
-| `@ghegar/tamiz` | Framework-free core: WFS client, CQL builder, table store | nothing |
-| `@ghegar/tamiz/react` | `useAttributeTable` with prop getters, `useDistinctValues` | `react >= 19` |
-| `@ghegar/tamiz/ol` | `bindOlSelection`: highlight, click to select, zoom to selection | `ol >= 10` |
+| `@npmegar/tamiz` | Framework-free core: WFS client, CQL builder, table store | nothing |
+| `@npmegar/tamiz/react` | `useAttributeTable` with prop getters, `useDistinctValues` | `react >= 19` |
+| `@npmegar/tamiz/ol` | `bindOlSelection`: highlight, click to select, zoom to selection | `ol >= 10` |
 
 ## Quick start
 
 ```ts
-import { createAttributeTable } from '@ghegar/tamiz';
-import { bindOlSelection } from '@ghegar/tamiz/ol';
+import { createAttributeTable } from '@npmegar/tamiz';
+import { bindOlSelection } from '@npmegar/tamiz/ol';
 
 const table = createAttributeTable({
     source: { url: 'https://example.org/geoserver/wfs', typeName: 'ws:municipalities', version: '2.0.0' },
@@ -48,7 +48,7 @@ bindOlSelection(table, map, { style: { 'stroke-color': '#e4572e', 'stroke-width'
 ## Core
 
 ```ts
-import { createAttributeTable } from '@ghegar/tamiz';
+import { createAttributeTable } from '@npmegar/tamiz';
 
 const table = createAttributeTable({
     source: { url: 'https://example.org/geoserver/wfs', typeName: 'ws:municipalities', version: '2.0.0' },
@@ -149,7 +149,7 @@ With `idField: null` rows use the WFS feature id (`layer.123`) and selections fi
 ## React
 
 ```tsx
-import { useAttributeTable } from '@ghegar/tamiz/react';
+import { useAttributeTable } from '@npmegar/tamiz/react';
 
 function Grid({ table }) {
     const t = useAttributeTable(table);
@@ -183,7 +183,7 @@ query, column or options change, and aborts the request it no longer needs.
 ## OpenLayers
 
 ```ts
-import { bindOlSelection } from '@ghegar/tamiz/ol';
+import { bindOlSelection } from '@npmegar/tamiz/ol';
 
 const selection = bindOlSelection(table, map, {
     style: { 'stroke-color': '#e4572e', 'stroke-width': 3 },

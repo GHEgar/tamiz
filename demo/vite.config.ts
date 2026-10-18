@@ -10,9 +10,9 @@ export default defineConfig({
     plugins: [react()],
     resolve: {
         alias: [
-            { find: /^@ghegar\/tamiz\/react$/, replacement: src('react/index.ts') },
-            { find: /^@ghegar\/tamiz\/ol$/, replacement: src('ol/index.ts') },
-            { find: /^@ghegar\/tamiz$/, replacement: src('core/index.ts') },
+            { find: /^@npmegar\/tamiz\/react$/, replacement: src('react/index.ts') },
+            { find: /^@npmegar\/tamiz\/ol$/, replacement: src('ol/index.ts') },
+            { find: /^@npmegar\/tamiz$/, replacement: src('core/index.ts') },
         ],
     },
     build: {
