@@ -29,6 +29,11 @@ export const effectiveCql = (state: QueryState, idField: string | null, withSele
     withSelection && state.onlySelected ? selectionCql([...state.selection], idField) : null,
 ]);
 
+export type ComposerScope = 'all' | 'user';
+
+export const composerCql = (state: QueryState, idField: string | null, scope: ComposerScope): string | null =>
+    effectiveCql(scope === 'user' ? { ...state, baseCql: null } : state, idField);
+
 export const buildChips = (state: QueryState, labels: Labels): Chip[] => {
     const chips: Chip[] = [];
     if (state.baseCql) chips.push({ key: 'base', label: labels.base ?? 'Inherited filter', source: 'base', removable: false });

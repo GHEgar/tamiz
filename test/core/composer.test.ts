@@ -34,3 +34,29 @@ describe('table with a composer', () => {
         expectTypeOf<CqlComposer>().toExtend<CqlComposerLike>();
     });
 });
+
+describe('composerScope', () => {
+    it('publishes only the user cql with scope user', () => {
+        const composer = fakeComposer();
+        const table = createAttributeTable({ source, baseCql: 'activo = 1', composer, composerScope: 'user' });
+        expect(composer.calls).toEqual([]);
+        table.setFilter('poblacion', { kind: 'number', op: 'gt', value: 5 });
+        expect(composer.calls).toEqual([['table', 'poblacion > 5']]);
+        expect(table.getSnapshot().cql).toBe('(activo = 1) AND (poblacion > 5)');
+        table.setBaseCql('activo = 0');
+        expect(composer.calls).toHaveLength(1);
+        table.select('municipios.1');
+        table.setOnlySelected(true);
+        expect(composer.calls.at(-1)).toEqual(['table', "(poblacion > 5) AND (IN ('municipios.1'))"]);
+        table.destroy();
+        expect(composer.calls.at(-1)).toEqual(['table', null]);
+    });
+
+    it('keeps publishing the whole cql by default', () => {
+        const composer = fakeComposer();
+        const table = createAttributeTable({ source, composer });
+        table.setBaseCql('activo = 1');
+        expect(composer.calls).toEqual([['table', 'activo = 1']]);
+        table.destroy();
+    });
+});

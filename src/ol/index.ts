@@ -10,7 +10,8 @@ import { isEmpty } from 'ol/extent.js';
 import { fromLonLat } from 'ol/proj.js';
 import type { StyleLike } from 'ol/style/Style.js';
 import type { FlatStyleLike } from 'ol/style/flat.js';
-import type { AttributeTable, GeoJsonCollection, SelectMode } from '../core/index.js';
+import type { AttributeTable, GeoJsonCollection } from '../core/index.js';
+import { clickMode } from '../core/selection.js';
 
 export interface MapPointerLike {
     coordinate: readonly [number, number];
@@ -58,12 +59,6 @@ export const clickExtent = (coordinate: readonly number[], resolution: number, t
 };
 
 export const DEFAULT_Z_INDEX = 1000;
-
-const clickMode = (event: unknown): SelectMode => {
-    if (typeof event !== 'object' || event === null || !('shiftKey' in event)) return 'replace';
-    const keys = event as { shiftKey?: boolean; ctrlKey?: boolean; metaKey?: boolean };
-    return keys.shiftKey || keys.ctrlKey || keys.metaKey ? 'toggle' : 'replace';
-};
 
 export const pickFeatures = (features: Feature[], extent: number[], coordinate: number[], pick: OlSelectionOptions['pick']): Feature[] => {
     const hits = features.filter(feature => feature.getGeometry()?.intersectsExtent(extent) ?? false);

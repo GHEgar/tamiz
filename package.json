@@ -1,9 +1,10 @@
 {
     "name": "@npmegar/tamiz",
     "version": "0.3.0",
-    "description": "Headless attribute table for WFS/GeoServer layers: CQL filters, paging, download and selection synced with OpenLayers.",
+    "description": "Headless attribute table for WFS/GeoServer layers: CQL filters, paging, download and selection synced with OpenLayers or MapLibre.",
     "keywords": [
         "openlayers",
+        "maplibre",
         "wfs",
         "geoserver",
         "attribute-table",
@@ -36,6 +37,10 @@
         "./ol": {
             "types": "./dist/ol/index.d.ts",
             "import": "./dist/ol/index.js"
+        },
+        "./maplibre": {
+            "types": "./dist/maplibre/index.d.ts",
+            "import": "./dist/maplibre/index.js"
         }
     },
     "scripts": {
@@ -49,10 +54,14 @@
         "e2e": "playwright test"
     },
     "peerDependencies": {
+        "maplibre-gl": ">=6",
         "ol": ">=10",
         "react": ">=19"
     },
     "peerDependenciesMeta": {
+        "maplibre-gl": {
+            "optional": true
+        },
         "ol": {
             "optional": true
         },
@@ -71,6 +80,7 @@
         "eslint-plugin-jsx-a11y": "^6.10.2",
         "eslint-plugin-react-hooks": "^7.1.1",
         "happy-dom": "^20.14.5",
+        "maplibre-gl": "^6.15.0",
         "ol": "^10.11.0",
         "react": "^19.3.0",
         "react-dom": "^19.3.0",

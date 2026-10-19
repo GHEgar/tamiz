@@ -2,7 +2,7 @@ import { buildColumns, moveName, orderedNames, type ColumnState } from './column
 import { and, bboxToCql, filtersToCql, idsToCql } from './cql.js';
 import { createDistinct, type Distinct, type DistinctStrategy } from './distinct.js';
 import { createDownloads, type Downloads } from './table-download.js';
-import { buildChips, effectiveCql, type Labels, type QueryState } from './query.js';
+import { buildChips, composerCql, effectiveCql, type ComposerScope, type Labels, type QueryState } from './query.js';
 import { applySelection, sameSelection } from './selection.js';
 import type { ColumnFilter, CqlComposerLike, Row, Schema, SelectMode, Sort, Status, TableEvent, TableSnapshot, WfsSource } from './types.js';
 import { describe, getCollection, hits, matchedOf, toRows, type GeoJsonCollection } from './wfs.js';
@@ -21,6 +21,7 @@ export interface TableOptions {
     onEvent?: (event: TableEvent) => void;
     composer?: CqlComposerLike;
     fragment?: string;
+    composerScope?: ComposerScope;
 }
 
 export interface FeatureRequest {
@@ -78,7 +79,13 @@ export const createAttributeTable = (options: TableOptions): AttributeTable => {
     const labels = options.labels ?? {};
     const emit = (event: TableEvent): void => options.onEvent?.(event);
     const listeners = new Set<() => void>();
-    const publish = (cql: string | null): void => options.composer?.set(options.fragment ?? 'table', cql);
+    const scope = options.composerScope ?? 'all';
+    let published: string | null = null;
+    const publish = (cql: string | null): void => {
+        if (cql === published) return;
+        published = cql;
+        options.composer?.set(options.fragment ?? 'table', cql);
+    };
 
     let state: State = {
         status: 'idle', error: null, schema: options.schema ?? null, rows: [], page: 0,
@@ -88,7 +95,7 @@ export const createAttributeTable = (options: TableOptions): AttributeTable => {
         hidden: new Set(options.columns?.hidden ?? []), labels: options.columns?.labels ?? {},
     };
     let snapshot = toSnapshot(state);
-    if (snapshot.cql !== null) publish(snapshot.cql);
+    publish(composerCql(state, idField, scope));
     let started = false;
     let scheduled = false;
     let controller: AbortController | null = null;
@@ -121,8 +128,8 @@ export const createAttributeTable = (options: TableOptions): AttributeTable => {
         const previousCql = snapshot.cql;
         state = { ...state, ...patch };
         snapshot = toSnapshot(state);
+        publish(composerCql(state, idField, scope));
         if (snapshot.cql !== previousCql) {
-            publish(snapshot.cql);
             emit({ type: 'query', cql: snapshot.cql });
         }
         if (started && fetchKey() !== fetchedKey) schedule();
@@ -236,7 +243,7 @@ export const createAttributeTable = (options: TableOptions): AttributeTable => {
             started = false;
             controller?.abort();
             listeners.clear();
-            if (snapshot.cql !== null) publish(null);
+            publish(null);
         },
         setPage: page => set({ page: Math.max(0, Math.trunc(page)) }),
         setPageSize: size => set({ pageSize: Math.max(1, Math.trunc(size)), page: 0 }),

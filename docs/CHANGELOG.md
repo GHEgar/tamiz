@@ -15,6 +15,14 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y 
   `ArbiterLike` y `MapPointerLike`; el `Arbiter` de urdimbre encaja.
 - `activate()`, `deactivate()` y `active` en el puente de OpenLayers, con o sin árbitro.
 - `DEFAULT_Z_INDEX` (1000) exportado; el README documenta la banda de herramientas 900–999 de urdimbre.
+- Entrada `@npmegar/tamiz/maplibre` con `bindMapLibreSelection`: resalta la selección en una fuente
+  GeoJSON propia (capas `DEFAULT_LAYERS` o `layers`, con `beforeId`) o con `feature-state` sobre una
+  capa del consumidor; selecciona con clic consultando lo dibujado (`queryLayers`) o pidiendo al WFS un
+  `BBOX` en `EPSG:3857`; `pick`, `zoomOnSelect` (`true` o `'single'`), `zoomToSelection`, `arbiter` y
+  `tool`, `activate()` y `deactivate()`. Tipo estructural `MapLibreMapLike`; `maplibre-gl >= 6` es peer
+  opcional.
+- Opción `composerScope` en `createAttributeTable`: `'user'` publica al compositor solo el CQL del
+  usuario, sin `baseCql`; `'all'` (por omisión) publica `snapshot.cql` como hasta ahora.
 
 ### Cambiado
 

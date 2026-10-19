@@ -20,6 +20,9 @@
             "@npmegar/tamiz/react": [
                 "./src/react/index.ts"
             ],
+            "@npmegar/tamiz/maplibre": [
+                "./src/maplibre/index.ts"
+            ],
             "@npmegar/tamiz/ol": [
                 "./src/ol/index.ts"
             ],

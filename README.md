@@ -4,7 +4,7 @@
 [![size](https://img.shields.io/bundlejs/size/@npmegar/tamiz)](https://bundlejs.com/?q=@npmegar/tamiz)
 [![license](https://img.shields.io/github/license/GHEgar/tamiz)](LICENSE)
 
-Headless attribute table for WFS/GeoServer layers: CQL filters, paging, download and selection synced with OpenLayers.
+Headless attribute table for WFS/GeoServer layers: CQL filters, paging, download and selection synced with OpenLayers or MapLibre.
 
 ![A table of US states sorted, filtered by name and selected from the table and from the map](.github/assets/demo.gif)
 
@@ -12,8 +12,8 @@ Headless attribute table for WFS/GeoServer layers: CQL filters, paging, download
 
 tamiz owns the state — schema, paging, sorting, column filters turned into CQL, hand-written CQL,
 column visibility and order, selection, downloads — and you own every pixel: it ships no styles, only
-state, events and ARIA/`data-*` attributes. An optional bridge keeps the selection in sync with an
-OpenLayers map.
+state, events and ARIA/`data-*` attributes. Optional bridges keep the selection in sync with an
+OpenLayers or MapLibre map.
 
 ## Install
 
@@ -26,6 +26,7 @@ npm install @npmegar/tamiz
 | `@npmegar/tamiz` | Framework-free core: WFS client, CQL builder, table store | nothing |
 | `@npmegar/tamiz/react` | `useAttributeTable` with prop getters, `useDistinctValues` | `react >= 19` |
 | `@npmegar/tamiz/ol` | `bindOlSelection`: highlight, click to select, zoom to selection | `ol >= 10` |
+| `@npmegar/tamiz/maplibre` | `bindMapLibreSelection`: the same for MapLibre GL JS | `maplibre-gl >= 6` |
 
 ## Quick start
 
@@ -204,6 +205,34 @@ feature, and a function `(features, coordinate) => features` decides for styles 
 `sortBy` or z-order. It does not touch your WMS layer: pass `snapshot.cql` to its `CQL_FILTER` if the
 map should follow the table.
 
+## MapLibre
+
+```ts
+import { bindMapLibreSelection } from '@npmegar/tamiz/maplibre';
+
+const selection = bindMapLibreSelection(table, map, {
+    beforeId: 'labels',
+    zoomOnSelect: 'single',
+});
+await selection.zoomToSelection();
+selection.destroy();
+```
+
+The map is typed structurally (`MapLibreMapLike`) and `maplibre-gl` is only a type import. By default
+the bridge adds a GeoJSON source (`tamiz-selection`) and three layers (`DEFAULT_LAYERS`: fill, line and
+circle; `layers` replaces them, `beforeId` places them), and fills it with the selected geometries,
+fetched in `EPSG:3857` and turned into lng/lat on the client. With
+`highlight: { source, sourceLayer?, key?, featureId? }` it sets `feature-state` (`selected` by default)
+on your own layer instead and fetches no geometry; that source needs feature ids (`promoteId`) that
+match the table ids, or `featureId` to map them.
+
+A plain click replaces the selection; Ctrl, ⌘ or Shift toggle. With `queryLayers` the click reads
+what those layers draw (`queryRenderedFeatures` in a `hitTolerance` pixel box) and takes the id from
+`idField` or the feature id; without it, it asks the WFS for a `BBOX` around the click in `EPSG:3857`,
+combined with the table's CQL, which suits WMS layers. Candidates come top first, so `pick: 'first'`
+(default) is the one on top. `zoomOnSelect: true` fits any selection made in the table, `'single'` only
+a single row; selections made on the map never move it.
+
 ## Working with urdimbre
 
 These options are optional and structural, so tamiz does not depend on urdimbre:
@@ -216,6 +245,12 @@ These options are optional and structural, so tamiz does not depend on urdimbre:
   `tool` (`table` by default) and selects only with the clicks the arbiter hands over. When another tool
   claims, the bridge steps aside; `activate()` claims again, `deactivate()` lets go and `active` tells
   which. Without an arbiter they attach and detach the map listener.
+- `composerScope: 'user'` publishes only what the user filters in the table (column filters or
+  custom CQL, plus "only selected"), without `baseCql`. Use it when `baseCql` is a condition for the
+  table alone, such as "only what is visible", that must not filter the map. The default, `'all'`,
+  publishes `snapshot.cql`.
+- `bindMapLibreSelection` takes the same `arbiter` and `tool` options; its pointer also carries the
+  `pixel`, as urdimbre's `MapPointer` does.
 - The selection layer uses `zIndex` 1000 by default, above urdimbre's tool band (900–999); pass a value
   in that band to sit among the other tools.
 - `source.url` is used as given and `source.wpsUrl` skips guessing the WPS endpoint, so a catalog that
@@ -231,6 +266,8 @@ These options are optional and structural, so tamiz does not depend on urdimbre:
 - In WFS 2.0 with `EPSG:4326` GeoServer answers in lat/lon order. The bridge always asks for the view
   projection, so it is not affected; a request in `EPSG:4326` made by hand is.
 - Virtualizing long pages is up to you.
+- After `map.setStyle()` the MapLibre bridge redraws its own source on the next selection change, but
+  `feature-state` marks are lost until the selection changes; rebind it to restore them.
 
 ## Development
 

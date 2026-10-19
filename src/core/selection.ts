@@ -47,3 +47,9 @@ export const sameSelection = (a: ReadonlySet<string>, b: ReadonlySet<string>): b
     for (const id of a) if (!b.has(id)) return false;
     return true;
 };
+
+export const clickMode = (event: unknown): SelectMode => {
+    if (typeof event !== 'object' || event === null || !('shiftKey' in event)) return 'replace';
+    const keys = event as { shiftKey?: boolean; ctrlKey?: boolean; metaKey?: boolean };
+    return keys.shiftKey || keys.ctrlKey || keys.metaKey ? 'toggle' : 'replace';
+};
