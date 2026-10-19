@@ -204,6 +204,23 @@ feature, and a function `(features, coordinate) => features` decides for styles 
 `sortBy` or z-order. It does not touch your WMS layer: pass `snapshot.cql` to its `CQL_FILTER` if the
 map should follow the table.
 
+## Working with urdimbre
+
+These options are optional and structural, so tamiz does not depend on urdimbre:
+
+- `composer` (any object with `set(name, fragment)`, such as urdimbre's `CqlComposer`) receives
+  `snapshot.cql` as the `table` fragment (`fragment` renames it) every time it changes, and `null` on
+  `destroy()`, instead of you copying it to the WMS. If the map's filters are already fragments, leave
+  them out of `baseCql` so they are not sent twice.
+- `bindOlSelection(table, map, { arbiter })` does not listen to `singleclick`: it claims the arbiter as
+  `tool` (`table` by default) and selects only with the clicks the arbiter hands over. When another tool
+  claims, the bridge steps aside; `activate()` claims again, `deactivate()` lets go and `active` tells
+  which. Without an arbiter they attach and detach the map listener.
+- The selection layer uses `zIndex` 1000 by default, above urdimbre's tool band (900–999); pass a value
+  in that band to sit among the other tools.
+- `source.url` is used as given and `source.wpsUrl` skips guessing the WPS endpoint, so a catalog that
+  already resolved both can pass them straight through.
+
 ## Known limitations
 
 - Built for GeoServer WFS 2.0.0 and 1.1.0: `CQL_FILTER` is a GeoServer vendor parameter.

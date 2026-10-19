@@ -5,6 +5,17 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y 
 
 ## [No publicado]
 
+### Agregado
+
+- Opción `composer` (con `fragment`, `'table'` por omisión) en `createAttributeTable`: `snapshot.cql`
+  se escribe como fragmento con nombre en un compositor compartido cada vez que cambia y `null` al
+  destruir la tabla. Tipo estructural `CqlComposerLike`; el `CqlComposer` de urdimbre encaja.
+- Opción `arbiter` (con `tool`, `'table'` por omisión) en `bindOlSelection`: en lugar de escuchar
+  `singleclick`, reclama el árbitro y solo selecciona con los clics que este le entrega. Tipos
+  `ArbiterLike` y `MapPointerLike`; el `Arbiter` de urdimbre encaja.
+- `activate()`, `deactivate()` y `active` en el puente de OpenLayers, con o sin árbitro.
+- `DEFAULT_Z_INDEX` (1000) exportado; el README documenta la banda de herramientas 900–999 de urdimbre.
+
 ### Cambiado
 
 - El paquete pasa a llamarse `@npmegar/tamiz`.

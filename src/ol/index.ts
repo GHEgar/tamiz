@@ -7,9 +7,19 @@ import VectorLayer from 'ol/layer/Vector.js';
 import { unByKey } from 'ol/Observable.js';
 import VectorSource from 'ol/source/Vector.js';
 import { isEmpty } from 'ol/extent.js';
+import { fromLonLat } from 'ol/proj.js';
 import type { StyleLike } from 'ol/style/Style.js';
 import type { FlatStyleLike } from 'ol/style/flat.js';
 import type { AttributeTable, GeoJsonCollection, SelectMode } from '../core/index.js';
+
+export interface MapPointerLike {
+    coordinate: readonly [number, number];
+    originalEvent: unknown;
+}
+
+export interface ArbiterLike {
+    claim(tool: string, handlers: { click?(e: MapPointerLike): void; escape?(): void }): () => void;
+}
 
 export type PickFunction = (features: Feature[], coordinate: number[]) => Feature[];
 
@@ -24,11 +34,16 @@ export interface OlSelectionOptions {
     fit?: FitOptions;
     maxFeatures?: number;
     onError?: (error: Error) => void;
+    arbiter?: ArbiterLike;
+    tool?: string;
 }
 
 export interface OlSelection {
     layer: VectorLayer<VectorSource>;
     source: VectorSource;
+    readonly active: boolean;
+    activate(): void;
+    deactivate(): void;
     zoomToSelection(fit?: FitOptions): boolean;
     sync(): Promise<void>;
     destroy(): void;
@@ -42,10 +57,12 @@ export const clickExtent = (coordinate: readonly number[], resolution: number, t
     return [x - delta, y - delta, x + delta, y + delta];
 };
 
-const clickMode = (event: MouseEvent | PointerEvent | KeyboardEvent | WheelEvent | TouchEvent): SelectMode => {
-    if (!('shiftKey' in event)) return 'replace';
-    if (event.shiftKey || event.ctrlKey || event.metaKey) return 'toggle';
-    return 'replace';
+export const DEFAULT_Z_INDEX = 1000;
+
+const clickMode = (event: unknown): SelectMode => {
+    if (typeof event !== 'object' || event === null || !('shiftKey' in event)) return 'replace';
+    const keys = event as { shiftKey?: boolean; ctrlKey?: boolean; metaKey?: boolean };
+    return keys.shiftKey || keys.ctrlKey || keys.metaKey ? 'toggle' : 'replace';
 };
 
 export const pickFeatures = (features: Feature[], extent: number[], coordinate: number[], pick: OlSelectionOptions['pick']): Feature[] => {
@@ -60,7 +77,7 @@ const asError = (value: unknown): Error => (value instanceof Error ? value : new
 export const bindOlSelection = (table: AttributeTable, map: Map, options: OlSelectionOptions = {}): OlSelection => {
     const format = new GeoJSON();
     const source = new VectorSource();
-    const layer = new VectorLayer({ source, zIndex: options.zIndex ?? 1000 });
+    const layer = new VectorLayer({ source, zIndex: options.zIndex ?? DEFAULT_Z_INDEX });
     if (options.style) layer.setStyle(options.style);
     map.addLayer(layer);
 
@@ -124,19 +141,19 @@ export const bindOlSelection = (table: AttributeTable, map: Map, options: OlSele
         void sync();
     });
 
-    const onClick = (event: MapBrowserEvent): void => {
+    const selectAt = (coordinate: number[], originalEvent: unknown): void => {
         const resolution = map.getView().getResolution();
         if (resolution === undefined) return;
         const code = projection();
-        const mode = clickMode(event.originalEvent);
-        const extent = clickExtent(event.coordinate, resolution, options.hitTolerance ?? 4);
+        const mode = clickMode(originalEvent);
+        const extent = clickExtent(coordinate, resolution, options.hitTolerance ?? 4);
         table.fetchFeatures({
             bbox: { extent, srsName: code },
             applyQuery: options.applyQuery ?? true,
             srsName: code,
             count: options.maxFeatures ?? 50,
         }).then(collection => {
-            const features = pickFeatures(readFeatures(collection), extent, event.coordinate, options.pick);
+            const features = pickFeatures(readFeatures(collection), extent, coordinate, options.pick);
             source.addFeatures(features.filter(feature => source.getFeatureById(feature.getId() ?? '') === null));
             const ids = features.map(feature => String(feature.getId()));
             if (ids.length === 0 && mode === 'toggle') return;
@@ -144,18 +161,51 @@ export const bindOlSelection = (table: AttributeTable, map: Map, options: OlSele
         }).catch(report);
     };
 
-    const clickKey = (options.selectOnClick ?? true) ? map.on('singleclick', onClick) : null;
+    const onClick = (event: MapBrowserEvent): void => selectAt(event.coordinate, event.originalEvent);
+
+    const onPointer = (pointer: MapPointerLike): void => {
+        selectAt(fromLonLat([...pointer.coordinate], map.getView().getProjection()), pointer.originalEvent);
+    };
+
+    let release: (() => void) | null = null;
+
+    const deactivate = (): void => {
+        const current = release;
+        release = null;
+        current?.();
+    };
+
+    const activate = (): void => {
+        if (release) return;
+        const { arbiter } = options;
+        if (!arbiter) {
+            const key = map.on('singleclick', onClick);
+            release = () => unByKey(key);
+            return;
+        }
+        let own: (() => void) | null = null;
+        const escape = (): void => {
+            if (release === own) release = null;
+        };
+        own = arbiter.claim(options.tool ?? 'table', { click: onPointer, escape });
+        release = own;
+    };
+
+    if (options.selectOnClick ?? true) activate();
     if (lastSelection.size > 0) void sync();
 
     return {
         layer,
         source,
+        get active() { return release !== null; },
+        activate,
+        deactivate,
         zoomToSelection,
         sync: () => pending,
         destroy() {
             unsubscribe();
             controller?.abort();
-            if (clickKey) unByKey(clickKey);
+            deactivate();
             map.removeLayer(layer);
             source.clear();
         },

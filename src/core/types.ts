@@ -17,6 +17,10 @@ export interface WfsSource {
     wpsUrl?: string;
 }
 
+export interface CqlComposerLike {
+    set(name: string, fragment: string | null): void;
+}
+
 export interface Field {
     name: string;
     type: string;
