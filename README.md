@@ -109,6 +109,22 @@ stays `null`.
 | `date` | `{ from?, to?, before? }` (ISO strings; `before` is exclusive) | `>=` / `<=` / `<` |
 | `boolean` | `{ value }` | `col = true` |
 | `null` | `{ isNull }` | `IS NULL` / `IS NOT NULL` |
+| `combined` | `{ condition, list }`: any of the above but `list`, plus a `list` | `(condition) AND (col IN (…))` |
+
+A column holds one filter, but a condition and a list of values can live together on it:
+
+```ts
+table.setColumnCondition('name', { kind: 'text', op: 'contains', value: 'san' });
+table.setColumnValues('name', ['San Juan', 'San Pedro']);
+// (name ILIKE '%san%') AND (name IN ('San Juan', 'San Pedro'))
+
+const { condition, list } = splitFilter(table.getSnapshot().filters.name);
+```
+
+`setColumnCondition` and `setColumnValues` replace one part and keep the other; `null` or an empty
+list removes that part, and the filter collapses to a plain one when a single part is left.
+`combineFilters(condition, list)`, `withCondition(filter, condition)` and `withValues(filter, values)`
+do the same on plain objects, and `splitFilter(filter)` gives `{ condition, list }` back.
 
 Text filters escape `%`, `_` and `\`, so they match those characters literally. Use a hand-written
 CQL when you need wildcards.
@@ -136,11 +152,23 @@ const { values, complete } = await table.fetchDistinct('region', { limit: 200, s
 | `'wps'` | GeoServer's `gs:PagedUnique` process | Exact, but needs the WPS extension; with `limit` it returns an arbitrary subset |
 | `(query) => Promise<{ values, complete }>` | Your own source | Values you already know or keep in a catalog |
 
-The values honor the table's query except the column's own filter, so picking values for `region`
-is not narrowed by the regions already picked. `applyQuery: false` ignores the query. `search`
+The values honor the table's query except the column's own list of values, so picking values for
+`region` is not narrowed by the regions already picked; a condition on that same column does apply. `applyQuery: false` ignores the query. `search`
 narrows text columns on the server and the rest on the client. Values come sorted; `complete` is
 `false` when there may be more. The WPS endpoint is the WFS URL with `/wfs` replaced by `/wps`, or
 `source.wpsUrl`. `scanDistinct` and `wpsDistinct` are exported to build your own fallback.
+
+```ts
+const { values, counts } = await table.fetchDistinct('region', { counts: true, order: 'count' });
+// values: ['Pacific', 'Mtn', …], counts: [412, 167, …]
+```
+
+With `counts: true` the result also has `counts`, one per value. `'scan'` counts the rows it read, so
+they are exact only when `complete` is `true`; `'wps'` switches to GeoServer's `gs:Aggregate` with
+`Count` grouped by the column, which is exact and returns every group (then sorted and cut to `limit`).
+Your own provider receives `counts` in the query and may return `counts`; without them, or when they
+do not line up with `values`, the result has none. `order: 'count'` sorts by count, highest first.
+`aggregateCounts(source, { column, cql })` is exported too.
 
 ### Ids
 
@@ -175,11 +203,12 @@ Headers toggle sorting (ascending, descending, default). Rows select on click, t
 select a range with Shift, and toggle with Space or Enter. `getColumnToggleProps` fits a checkbox.
 
 ```tsx
-const { values, complete, status } = useDistinctValues(table, 'region', { search, limit: 100 });
+const { values, counts, complete, status } = useDistinctValues(table, 'region', { search, limit: 100, counts: true });
 ```
 
 `useDistinctValues` waits until the table has started and knows its schema, asks again when the
-query, column or options change, and aborts the request it no longer needs.
+query, column or options change, and aborts the request it no longer needs. `counts` is `null` unless
+it was asked for and the strategy gave them.
 
 ## OpenLayers
 

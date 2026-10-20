@@ -65,6 +65,8 @@ export const filterToCql = (column: string, filter: ColumnFilter): string | null
             return `${field} = ${literal(filter.value)}`;
         case 'null':
             return `${field} ${filter.isNull ? 'IS NULL' : 'IS NOT NULL'}`;
+        case 'combined':
+            return and([filterToCql(column, filter.condition), filterToCql(column, filter.list)]);
     }
 };
 
@@ -113,5 +115,10 @@ export const defaultFilterLabel: FilterLabel = (column, filter) => {
             return `${column}: ${filter.value ? 'yes' : 'no'}`;
         case 'null':
             return `${column} ${filter.isNull ? 'is empty' : 'is not empty'}`;
+        case 'combined':
+            return [filter.condition, filter.list]
+                .filter(part => !isEmptyFilter(part))
+                .map(part => defaultFilterLabel(column, part))
+                .join(' · ');
     }
 };

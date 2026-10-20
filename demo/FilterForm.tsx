@@ -1,9 +1,9 @@
 import { useState, type FormEvent } from 'react';
-import type { Column, ColumnFilter } from '@npmegar/tamiz';
+import type { Column, ConditionFilter } from '@npmegar/tamiz';
 import type { UseAttributeTable } from '@npmegar/tamiz/react';
 import { ListPicker } from './ListPicker';
 
-const buildFilter = (column: Column, op: string, value: string, extra: string): ColumnFilter | null => {
+const buildFilter = (column: Column, op: string, value: string, extra: string): ConditionFilter | null => {
     switch (column.family) {
         case 'number': {
             if (op === 'between') return { kind: 'number', op: 'between', min: Number(value), max: Number(extra) };
@@ -41,7 +41,7 @@ export function FilterForm({ table: t }: { table: UseAttributeTable }) {
         event.preventDefault();
         if (currentOp === 'list') return;
         const filter = buildFilter(column, currentOp, value, extra);
-        if (filter) t.table.setFilter(column.name, filter);
+        if (filter) t.table.setColumnCondition(column.name, filter);
     };
 
     return (

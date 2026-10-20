@@ -54,7 +54,10 @@ export type DateFilter = { kind: 'date'; from?: string; to?: string; before?: st
 export type BooleanFilter = { kind: 'boolean'; value: boolean };
 export type NullFilter = { kind: 'null'; isNull: boolean };
 
-export type ColumnFilter = ListFilter | TextFilter | NumberFilter | DateFilter | BooleanFilter | NullFilter;
+export type ConditionFilter = TextFilter | NumberFilter | DateFilter | BooleanFilter | NullFilter;
+export type CombinedFilter = { kind: 'combined'; condition: ConditionFilter; list: ListFilter };
+
+export type ColumnFilter = ListFilter | ConditionFilter | CombinedFilter;
 
 export type ChipSource = 'base' | 'column' | 'custom' | 'selection';
 

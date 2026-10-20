@@ -1,10 +1,13 @@
 import { buildColumns, moveName, orderedNames, type ColumnState } from './columns.js';
 import { and, bboxToCql, filtersToCql, idsToCql } from './cql.js';
 import { createDistinct, type Distinct, type DistinctStrategy } from './distinct.js';
+import { withCondition, withValues } from './filters.js';
 import { createDownloads, type Downloads } from './table-download.js';
 import { buildChips, composerCql, effectiveCql, type ComposerScope, type Labels, type QueryState } from './query.js';
 import { applySelection, sameSelection } from './selection.js';
-import type { ColumnFilter, CqlComposerLike, Row, Schema, SelectMode, Sort, Status, TableEvent, TableSnapshot, WfsSource } from './types.js';
+import type {
+    ColumnFilter, ConditionFilter, CqlComposerLike, Row, Scalar, Schema, SelectMode, Sort, Status, TableEvent, TableSnapshot, WfsSource,
+} from './types.js';
 import { describe, getCollection, hits, matchedOf, toRows, type GeoJsonCollection } from './wfs.js';
 
 export interface TableOptions {
@@ -46,6 +49,8 @@ export interface AttributeTable extends Downloads, Distinct {
     setSort(sort: Sort | null): void;
     toggleSort(field: string): void;
     setFilter(column: string, filter: ColumnFilter | null): void;
+    setColumnCondition(column: string, condition: ConditionFilter | null): void;
+    setColumnValues(column: string, values: readonly Scalar[] | null): void;
     clearFilters(): void;
     setCql(cql: string | null): void;
     setBaseCql(cql: string | null): void;
@@ -255,6 +260,8 @@ export const createAttributeTable = (options: TableOptions): AttributeTable => {
             else set({ sort: options.sort ?? null, page: 0 });
         },
         setFilter,
+        setColumnCondition: (column, condition) => setFilter(column, withCondition(state.filters[column], condition)),
+        setColumnValues: (column, values) => setFilter(column, withValues(state.filters[column], values)),
         clearFilters: () => setQuery({ filters: {}, customCql: null }),
         setCql: cql => setQuery({ customCql: cql?.trim() || null }),
         setBaseCql: cql => setQuery({ baseCql: cql?.trim() || null }),

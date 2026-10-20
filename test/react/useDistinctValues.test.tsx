@@ -8,6 +8,11 @@ const Values = ({ table, column }: { table: AttributeTable; column: string | nul
     return <p data-testid="values" data-status={distinct.status}>{distinct.values.join('|')}</p>;
 };
 
+const Counted = ({ table }: { table: AttributeTable }) => {
+    const distinct = useDistinctValues(table, 'nombre', { counts: true, order: 'count' });
+    return <p data-testid="counted">{distinct.values.map((value, index) => `${value}:${distinct.counts?.[index]}`).join('|')}</p>;
+};
+
 const make = () => {
     const fake = createFakeWfs();
     const table = createAttributeTable({ source: { url: 'https://x/wfs', typeName: 'ws:municipios', fetch: fake.fetch } });
@@ -45,5 +50,14 @@ describe('useDistinctValues', () => {
         expect(scans.at(-1)?.params.CQL_FILTER).toBe('poblacion > 5');
         rerender(<Values table={table} column={null} />);
         expect(screen.getByTestId('values').dataset.status).toBe('idle');
+    });
+
+    it('returns the count of each value when asked', async () => {
+        const fake = createFakeWfs({ features: ['a', 'b', 'b'].map((nombre, index) => ({ id: `m.${index}`, properties: { nombre } })) });
+        const table = createAttributeTable({ source: { url: 'https://x/wfs', typeName: 'ws:m', fetch: fake.fetch } });
+        table.start();
+        render(<Counted table={table} />);
+        await flush();
+        expect(screen.getByTestId('counted').textContent).toBe('b:2|a:1');
     });
 });

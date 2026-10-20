@@ -1,20 +1,26 @@
 import { and, filterToCql } from './cql.js';
+import { splitFilter } from './filters.js';
 import { effectiveCql, type QueryState } from './query.js';
-import type { Scalar, Schema, WfsSource } from './types.js';
+import type { ColumnFilter, Scalar, Schema, WfsSource } from './types.js';
 import { getCollection } from './wfs.js';
-import { pagedUnique } from './wps.js';
+import { aggregateCounts, pagedUnique } from './wps.js';
+
+export type DistinctOrder = 'value' | 'count';
 
 export interface DistinctRequest {
     limit?: number;
     search?: string;
     applyQuery?: boolean;
     scanSize?: number;
+    counts?: boolean;
+    order?: DistinctOrder;
     signal?: AbortSignal;
 }
 
 export interface DistinctValues {
     values: Scalar[];
     complete: boolean;
+    counts?: number[];
 }
 
 export interface DistinctQuery {
@@ -24,6 +30,7 @@ export interface DistinctQuery {
     search: string | null;
     limit: number;
     scanSize: number;
+    counts: boolean;
     signal?: AbortSignal | undefined;
 }
 
@@ -44,6 +51,16 @@ const isValue = (value: unknown): value is Scalar =>
 const compare = (a: Scalar, b: Scalar): number =>
     typeof a === 'number' && typeof b === 'number' ? a - b : String(a).localeCompare(String(b));
 
+interface Entry {
+    value: Scalar;
+    count: number;
+}
+
+const toResult = (entries: readonly Entry[], complete: boolean, counts: boolean): DistinctValues => {
+    const values = entries.map(entry => entry.value);
+    return counts ? { values, complete, counts: entries.map(entry => entry.count) } : { values, complete };
+};
+
 export const scanDistinct: DistinctProvider = async query => {
     const collection = await getCollection(query.source, {
         cql: query.cql,
@@ -51,14 +68,23 @@ export const scanDistinct: DistinctProvider = async query => {
         sort: { field: query.column, direction: 'asc' },
         count: query.scanSize,
     }, query.signal);
-    const values = [...new Set(collection.features.map(feature => feature.properties?.[query.column]).filter(isValue))];
-    return {
-        values: values.slice(0, query.limit),
-        complete: collection.features.length < query.scanSize && values.length <= query.limit,
-    };
+    const tally = new Map<Scalar, number>();
+    for (const feature of collection.features) {
+        const value = feature.properties?.[query.column];
+        if (isValue(value)) tally.set(value, (tally.get(value) ?? 0) + 1);
+    }
+    const entries = [...tally].map(([value, count]) => ({ value, count }));
+    const complete = collection.features.length < query.scanSize && entries.length <= query.limit;
+    return toResult(entries.slice(0, query.limit), complete, query.counts);
 };
 
 export const wpsDistinct: DistinctProvider = async query => {
+    if (query.counts) {
+        const groups = await aggregateCounts(query.source, { column: query.column, cql: query.cql, signal: query.signal });
+        const entries = groups.filter((group): group is Entry => isValue(group.value))
+            .sort((a, b) => compare(a.value, b.value));
+        return toResult(entries.slice(0, query.limit), entries.length <= query.limit, true);
+    }
     const result = await pagedUnique(query.source, {
         column: query.column, cql: query.cql, limit: query.limit, signal: query.signal,
     });
@@ -74,12 +100,23 @@ interface DistinctContext {
     getState: () => QueryState & { schema: Schema | null };
 }
 
+const withoutValues = (filters: Readonly<Record<string, ColumnFilter>>, column: string): Record<string, ColumnFilter> => {
+    const rest = Object.fromEntries(Object.entries(filters).filter(([name]) => name !== column));
+    const condition = splitFilter(filters[column]).condition;
+    return condition ? { ...rest, [column]: condition } : rest;
+};
+
+const sortEntries = (entries: Entry[], order: DistinctOrder): Entry[] => entries.sort(order === 'count'
+    ? (a, b) => b.count - a.count || compare(a.value, b.value)
+    : (a, b) => compare(a.value, b.value));
+
 export const createDistinct = (context: DistinctContext): Distinct => ({
     async fetchDistinct(column, request = {}) {
         const state = context.getState();
         const family = state.schema?.fields.find(field => field.name === column)?.family ?? null;
         const search = request.search?.trim() || null;
-        const filters = Object.fromEntries(Object.entries(state.filters).filter(([name]) => name !== column));
+        const counts = request.counts ?? false;
+        const filters = withoutValues(state.filters, column);
         const base = (request.applyQuery ?? true) ? effectiveCql({ ...state, filters }, context.idField) : null;
         const remote = search !== null && family === 'text';
         const cql = and([base, remote ? filterToCql(column, { kind: 'text', op: 'contains', value: search }) : null]);
@@ -91,10 +128,14 @@ export const createDistinct = (context: DistinctContext): Distinct => ({
             search,
             limit: Math.max(1, Math.trunc(request.limit ?? DEFAULT_LIMIT)),
             scanSize: Math.max(1, Math.trunc(request.scanSize ?? DEFAULT_SCAN)),
+            counts,
             signal: request.signal,
         });
         const needle = !remote && search ? search.toLowerCase() : null;
-        const values = needle ? result.values.filter(value => String(value).toLowerCase().includes(needle)) : [...result.values];
-        return { values: values.sort(compare), complete: result.complete };
+        const tallied = counts && result.counts?.length === result.values.length;
+        const entries = result.values.map((value, index) => ({ value, count: tallied ? result.counts?.[index] ?? 0 : 0 }))
+            .filter(entry => !needle || String(entry.value).toLowerCase().includes(needle));
+        const sorted = sortEntries(entries, tallied ? request.order ?? 'value' : 'value');
+        return toResult(sorted, result.complete, tallied);
     },
 });

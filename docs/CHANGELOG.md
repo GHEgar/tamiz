@@ -3,10 +3,21 @@
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y versionado con
 [SemVer](https://semver.org/lang/es/).
 
-## [No publicado]
+## [0.4.0] - 2026-10-19
 
 ### Agregado
 
+- Filtro `combined` (`{ condition, list }`): una condición y una lista de valores en la misma columna,
+  unidas con `AND`. Tipos `ConditionFilter` y `CombinedFilter`.
+- `setColumnCondition(column, condition)` y `setColumnValues(column, values)` en la tabla: cambian una
+  parte del filtro de la columna y conservan la otra; `null` o una lista vacía la quitan.
+- `combineFilters`, `splitFilter`, `withCondition` y `withValues`, y el tipo `FilterParts`.
+- Conteo por valor en `fetchDistinct` con `counts: true` y orden `order: 'count'` (tipo
+  `DistinctOrder`): `'scan'` cuenta las filas leídas y `'wps'` usa `gs:Aggregate` con `Count`
+  agrupado por la columna. `DistinctValues.counts` y `DistinctQuery.counts`; `aggregateCounts`,
+  `aggregateCountXml` y los tipos `CountRequest` y `ValueCount`.
+- `useDistinctValues` acepta `counts` y `order` y devuelve `counts` (`null` si no se pidió).
+- Demo: la lista de valores muestra el conteo y se combina con la condición de la columna.
 - Opción `composer` (con `fragment`, `'table'` por omisión) en `createAttributeTable`: `snapshot.cql`
   se escribe como fragmento con nombre en un compositor compartido cada vez que cambia y `null` al
   destruir la tabla. Tipo estructural `CqlComposerLike`; el `CqlComposer` de urdimbre encaja.
@@ -26,6 +37,8 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y 
 
 ### Cambiado
 
+- `ColumnFilter` suma `combined`: un `switch` exhaustivo sobre `kind` deja de compilar.
+- Los valores distintos de una columna ya no ignoran su condición: solo se omite su propia lista.
 - El paquete pasa a llamarse `@npmegar/tamiz`.
 - El demo está en inglés.
 - El demo usa los íconos de tesela.

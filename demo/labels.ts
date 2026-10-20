@@ -17,6 +17,8 @@ const filterLabel = (column: string, filter: ColumnFilter): string => {
             return `${column}: ${filter.value ? 'yes' : 'no'}`;
         case 'null':
             return `${column} ${filter.isNull ? 'is empty' : 'has a value'}`;
+        case 'combined':
+            return `${filterLabel(column, filter.condition)} · ${filterLabel(column, filter.list)}`;
     }
 };
 

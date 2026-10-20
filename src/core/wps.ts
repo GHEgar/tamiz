@@ -42,31 +42,77 @@ export const pagedUniqueXml = (typeName: string, request: UniqueRequest): string
     '<ows:Identifier>result</ows:Identifier></wps:RawDataOutput></wps:ResponseForm></wps:Execute>',
 ].join('');
 
-const parseJson = (body: string): { values?: unknown; size?: unknown } | null => {
+export interface CountRequest {
+    column: string;
+    cql: string | null;
+    signal?: AbortSignal | undefined;
+}
+
+export interface ValueCount {
+    value: Scalar | null;
+    count: number;
+}
+
+export const aggregateCountXml = (typeName: string, request: CountRequest): string => [
+    '<wps:Execute version="1.0.0" service="WPS" xmlns:wps="http://www.opengis.net/wps/1.0.0"',
+    ' xmlns:ows="http://www.opengis.net/ows/1.1" xmlns:xlink="http://www.w3.org/1999/xlink">',
+    '<ows:Identifier>gs:Aggregate</ows:Identifier><wps:DataInputs>',
+    '<wps:Input><ows:Identifier>features</ows:Identifier>',
+    `<wps:Reference mimeType="text/xml" xlink:href="${escapeXml(featuresReference(typeName, request.cql))}" method="GET"/>`,
+    '</wps:Input>',
+    literalInput('aggregationAttribute', request.column),
+    literalInput('function', 'Count'),
+    literalInput('singlePass', 'false'),
+    literalInput('groupByAttributes', request.column),
+    '</wps:DataInputs><wps:ResponseForm><wps:RawDataOutput mimeType="application/json">',
+    '<ows:Identifier>result</ows:Identifier></wps:RawDataOutput></wps:ResponseForm></wps:Execute>',
+].join('');
+
+const parseJson = (body: string): Record<string, unknown> | null => {
     try {
-        return JSON.parse(body) as { values?: unknown; size?: unknown };
+        const json: unknown = JSON.parse(body);
+        return json && typeof json === 'object' ? json as Record<string, unknown> : null;
     } catch {
         return null;
     }
 };
 
-export const pagedUnique = async (source: WfsSource, request: UniqueRequest): Promise<UniqueResult> => {
+const execute = async (
+    source: WfsSource,
+    xml: string,
+    signal: AbortSignal | undefined,
+    valid: (json: Record<string, unknown>) => boolean,
+): Promise<Record<string, unknown>> => {
     const fetcher = source.fetch ?? globalThis.fetch.bind(globalThis);
     const params = source.params ?? {};
     const base = wpsUrl(source);
     const url = Object.keys(params).length > 0 ? buildUrl({ ...source, url: base }, params) : base;
-    const init: RequestInit = {
-        method: 'POST',
-        headers: { ...source.headers, 'Content-Type': 'text/xml' },
-        body: pagedUniqueXml(source.typeName, request),
-    };
-    if (request.signal) init.signal = request.signal;
+    const init: RequestInit = { method: 'POST', headers: { ...source.headers, 'Content-Type': 'text/xml' }, body: xml };
+    if (signal) init.signal = signal;
     const response = await fetcher(url, init);
     const body = await response.text();
     const json = parseJson(body);
-    if (!response.ok || !json || !Array.isArray(json.values)) {
+    if (!response.ok || !json || !valid(json)) {
         throw new WfsError(exceptionText(body) ?? `WPS request failed with HTTP ${response.status}`, response.status);
     }
+    return json;
+};
+
+export const pagedUnique = async (source: WfsSource, request: UniqueRequest): Promise<UniqueResult> => {
+    const json = await execute(source, pagedUniqueXml(source.typeName, request), request.signal, body => Array.isArray(body.values));
     const values = json.values as Scalar[];
     return { values, size: typeof json.size === 'number' ? json.size : values.length };
+};
+
+const isCount = (row: unknown): row is [Scalar | null, number] =>
+    Array.isArray(row) && row.length >= 2 && typeof row[row.length - 1] === 'number';
+
+export const aggregateCounts = async (source: WfsSource, request: CountRequest): Promise<ValueCount[]> => {
+    const json = await execute(
+        source, aggregateCountXml(source.typeName, request), request.signal, body => Array.isArray(body.AggregationResults),
+    );
+    return (json.AggregationResults as unknown[]).filter(isCount).map(row => ({
+        value: row[0] ?? null,
+        count: row[row.length - 1] as number,
+    }));
 };
