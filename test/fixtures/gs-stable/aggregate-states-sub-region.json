@@ -1,0 +1,1 @@
+{"GroupByAttributes":["SUB_REGION"],"AggregationResults":[["N Eng",6],["W N Cen",7],["Pacific",3],["Mtn",8],["E S Cen",4],["S Atl",9],["E N Cen",5],["Mid Atl",3],["W S Cen",4]],"AggregationFunctions":["Count"],"AggregationAttribute":"SUB_REGION"}

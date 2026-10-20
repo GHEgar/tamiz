@@ -1,0 +1,1 @@
+{"GroupByAttributes":["SUB_REGION"],"AggregationResults":[["S Atl",1],["Mid Atl",2]],"AggregationFunctions":["Count"],"AggregationAttribute":"SUB_REGION"}

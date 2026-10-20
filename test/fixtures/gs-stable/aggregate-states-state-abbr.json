@@ -1,0 +1,1 @@
+{"GroupByAttributes":["STATE_ABBR"],"AggregationResults":[["MO",5],["IL",2],["LA",2],["ME",3],["NV",1],["TN",1],["NH",1],["NJ",1],[null,33]],"AggregationFunctions":["Count"],"AggregationAttribute":"STATE_ABBR"}

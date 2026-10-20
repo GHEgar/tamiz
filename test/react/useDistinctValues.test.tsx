@@ -33,7 +33,7 @@ describe('useDistinctValues', () => {
         act(() => table.start());
         await flush();
         expect(screen.getByTestId('values').dataset.status).toBe('ready');
-        expect(screen.getByTestId('values').textContent).toBe('M1|M2|M3');
+        expect(screen.getByTestId('values').textContent).toBe('M1|M10|M100');
     });
 
     it('asks again when the table query changes and stays idle without a column', async () => {

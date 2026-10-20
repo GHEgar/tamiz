@@ -3,6 +3,21 @@
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y versionado con
 [SemVer](https://semver.org/lang/es/).
 
+## [0.4.1] - 2026-10-20
+
+### Agregado
+
+- `parseAggregateCounts(json)`: lee la respuesta JSON de `gs:Aggregate` (`AggregationResults`).
+- `DistinctQuery.order` (opcional): el proveedor recibe el orden pedido.
+- Respuestas reales de `gs:Aggregate` de gs-stable grabadas como fixtures en `test/fixtures/gs-stable`.
+
+### Corregido
+
+- `fetchDistinct` con `counts` y `'wps'`: los grupos de columnas `dateTime`, que GeoServer serializa
+  como objeto con `time`, se descartaban; ahora salen como el texto ISO que devuelve WFS.
+- `order: 'count'` con `limit` cortaba por valor antes de ordenar por conteo; `'scan'` y `'wps'` ahora
+  ordenan y aplican `search` antes del límite.
+
 ## [0.4.0] - 2026-10-19
 
 ### Agregado

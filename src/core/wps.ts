@@ -104,15 +104,23 @@ export const pagedUnique = async (source: WfsSource, request: UniqueRequest): Pr
     return { values, size: typeof json.size === 'number' ? json.size : values.length };
 };
 
-const isCount = (row: unknown): row is [Scalar | null, number] =>
+const isCount = (row: unknown): row is unknown[] =>
     Array.isArray(row) && row.length >= 2 && typeof row[row.length - 1] === 'number';
 
-export const aggregateCounts = async (source: WfsSource, request: CountRequest): Promise<ValueCount[]> => {
-    const json = await execute(
-        source, aggregateCountXml(source.typeName, request), request.signal, body => Array.isArray(body.AggregationResults),
-    );
-    return (json.AggregationResults as unknown[]).filter(isCount).map(row => ({
-        value: row[0] ?? null,
-        count: row[row.length - 1] as number,
-    }));
+const isInstant = (value: unknown): value is { time: number } =>
+    typeof value === 'object' && value !== null && typeof (value as { time?: unknown }).time === 'number';
+
+export const groupValue = (raw: unknown): Scalar | null => {
+    if (typeof raw === 'string' || typeof raw === 'number' || typeof raw === 'boolean') return raw;
+    if (isInstant(raw) && Number.isFinite(raw.time)) return new Date(raw.time).toISOString().replace('.000Z', 'Z');
+    return null;
 };
+
+export const parseAggregateCounts = (json: Record<string, unknown>): ValueCount[] => {
+    const rows = Array.isArray(json.AggregationResults) ? json.AggregationResults as unknown[] : [];
+    return rows.filter(isCount).map(row => ({ value: groupValue(row[0]), count: row[row.length - 1] as number }));
+};
+
+export const aggregateCounts = async (source: WfsSource, request: CountRequest): Promise<ValueCount[]> => parseAggregateCounts(
+    await execute(source, aggregateCountXml(source.typeName, request), request.signal, body => Array.isArray(body.AggregationResults)),
+);

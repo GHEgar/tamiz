@@ -31,6 +31,7 @@ export interface DistinctQuery {
     limit: number;
     scanSize: number;
     counts: boolean;
+    order?: DistinctOrder | undefined;
     signal?: AbortSignal | undefined;
 }
 
@@ -56,6 +57,16 @@ interface Entry {
     count: number;
 }
 
+const sortEntries = (entries: Entry[], order: DistinctOrder): Entry[] => entries.sort(order === 'count'
+    ? (a, b) => b.count - a.count || compare(a.value, b.value)
+    : (a, b) => compare(a.value, b.value));
+
+const narrow = (entries: Entry[], query: DistinctQuery): Entry[] => {
+    const needle = query.search?.toLowerCase() ?? null;
+    const found = needle ? entries.filter(entry => String(entry.value).toLowerCase().includes(needle)) : entries;
+    return sortEntries(found, query.counts ? query.order ?? 'value' : 'value');
+};
+
 const toResult = (entries: readonly Entry[], complete: boolean, counts: boolean): DistinctValues => {
     const values = entries.map(entry => entry.value);
     return counts ? { values, complete, counts: entries.map(entry => entry.count) } : { values, complete };
@@ -73,7 +84,7 @@ export const scanDistinct: DistinctProvider = async query => {
         const value = feature.properties?.[query.column];
         if (isValue(value)) tally.set(value, (tally.get(value) ?? 0) + 1);
     }
-    const entries = [...tally].map(([value, count]) => ({ value, count }));
+    const entries = narrow([...tally].map(([value, count]) => ({ value, count })), query);
     const complete = collection.features.length < query.scanSize && entries.length <= query.limit;
     return toResult(entries.slice(0, query.limit), complete, query.counts);
 };
@@ -81,8 +92,7 @@ export const scanDistinct: DistinctProvider = async query => {
 export const wpsDistinct: DistinctProvider = async query => {
     if (query.counts) {
         const groups = await aggregateCounts(query.source, { column: query.column, cql: query.cql, signal: query.signal });
-        const entries = groups.filter((group): group is Entry => isValue(group.value))
-            .sort((a, b) => compare(a.value, b.value));
+        const entries = narrow(groups.filter((group): group is Entry => isValue(group.value)), query);
         return toResult(entries.slice(0, query.limit), entries.length <= query.limit, true);
     }
     const result = await pagedUnique(query.source, {
@@ -106,10 +116,6 @@ const withoutValues = (filters: Readonly<Record<string, ColumnFilter>>, column: 
     return condition ? { ...rest, [column]: condition } : rest;
 };
 
-const sortEntries = (entries: Entry[], order: DistinctOrder): Entry[] => entries.sort(order === 'count'
-    ? (a, b) => b.count - a.count || compare(a.value, b.value)
-    : (a, b) => compare(a.value, b.value));
-
 export const createDistinct = (context: DistinctContext): Distinct => ({
     async fetchDistinct(column, request = {}) {
         const state = context.getState();
@@ -129,6 +135,7 @@ export const createDistinct = (context: DistinctContext): Distinct => ({
             limit: Math.max(1, Math.trunc(request.limit ?? DEFAULT_LIMIT)),
             scanSize: Math.max(1, Math.trunc(request.scanSize ?? DEFAULT_SCAN)),
             counts,
+            order: request.order ?? 'value',
             signal: request.signal,
         });
         const needle = !remote && search ? search.toLowerCase() : null;

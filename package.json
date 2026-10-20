@@ -1,6 +1,6 @@
 {
     "name": "@npmegar/tamiz",
-    "version": "0.4.0",
+    "version": "0.4.1",
     "description": "Headless attribute table for WFS/GeoServer layers: CQL filters, paging, download and selection synced with OpenLayers or MapLibre.",
     "keywords": [
         "openlayers",

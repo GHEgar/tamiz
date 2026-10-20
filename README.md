@@ -165,10 +165,12 @@ const { values, counts } = await table.fetchDistinct('region', { counts: true, o
 
 With `counts: true` the result also has `counts`, one per value. `'scan'` counts the rows it read, so
 they are exact only when `complete` is `true`; `'wps'` switches to GeoServer's `gs:Aggregate` with
-`Count` grouped by the column, which is exact and returns every group (then sorted and cut to `limit`).
-Your own provider receives `counts` in the query and may return `counts`; without them, or when they
+`Count` grouped by the column, which is exact and returns every group. Both sort by `order` and apply
+`search` before cutting to `limit`, so `order: 'count'` with a `limit` gives the most frequent values.
+The null group is left out, and timestamps come back as the same ISO text WFS returns. Your own
+provider receives `counts` and `order` in the query and may return `counts`; without them, or when they
 do not line up with `values`, the result has none. `order: 'count'` sorts by count, highest first.
-`aggregateCounts(source, { column, cql })` is exported too.
+`aggregateCounts(source, { column, cql })` and `parseAggregateCounts(json)` are exported too.
 
 ### Ids
 
@@ -291,6 +293,8 @@ These options are optional and structural, so tamiz does not depend on urdimbre:
 - Without a primary key GeoServer cannot page unless every request has a `sortBy`: use `stableSort`.
 - `'scan'` distinct values can come out short when one page is full of repeated values; `'wps'` needs
   the WPS extension and, with `limit`, returns an arbitrary subset.
+- GeoServer's `gs:Aggregate` cannot encode a group of a `date` or `time` column: with `'wps'` and
+  `counts`, those columns reject with GeoServer's error. `dateTime` columns work.
 - With more than `maxFeatures` features under a map click, the one on top may not be among them.
 - In WFS 2.0 with `EPSG:4326` GeoServer answers in lat/lon order. The bridge always asks for the view
   projection, so it is not affected; a request in `EPSG:4326` made by hand is.

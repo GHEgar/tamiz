@@ -7,7 +7,7 @@ export type {
 } from './distinct.js';
 export { combineFilters, splitFilter, withCondition, withValues } from './filters.js';
 export type { FilterParts } from './filters.js';
-export { aggregateCountXml, aggregateCounts, pagedUnique, pagedUniqueXml, wpsUrl } from './wps.js';
+export { aggregateCountXml, aggregateCounts, pagedUnique, pagedUniqueXml, parseAggregateCounts, wpsUrl } from './wps.js';
 export type { CountRequest, ValueCount } from './wps.js';
 export type { ComposerScope, Labels } from './query.js';
 export {

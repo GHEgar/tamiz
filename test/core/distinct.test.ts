@@ -32,7 +32,7 @@ describe('fetchDistinct', () => {
     it('reports an incomplete scan when the page is full or the limit cuts it', async () => {
         const { table } = setup();
         expect((await table.fetchDistinct('nombre', { scanSize: 6 })).complete).toBe(false);
-        expect(await table.fetchDistinct('nombre', { limit: 2 })).toEqual({ values: ['Mtn', 'Pacific'], complete: false });
+        expect(await table.fetchDistinct('nombre', { limit: 2 })).toEqual({ values: ['E N Cen', 'Mtn'], complete: false });
     });
 
     it('applies the table query without the column own filter and searches text on the server', async () => {
